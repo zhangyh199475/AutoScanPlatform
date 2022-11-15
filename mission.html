@@ -69,6 +69,12 @@ function get_state(){
         }
         state = JSON.parse(data)['state'];
         document.getElementById("move_info").innerHTML = state_to_text[state];
+        if (state == 'finished') {
+            document.getElementById("start_button").disabled = 'disable';
+        }
+        else {
+            delete document.getElementById("start_button").disabled;
+        }
     })
 }
 
@@ -106,12 +112,18 @@ function get_state(){
         重复采集次数:<input type="text" id='f_times' value="30" style="width:60px;">
     </p>
     <p>
-        <span id="scan_info">[当前模式]:未选择</span>
-        <span id="move_info">[当前状态]:停止</span>
-        </br></br>
-        <button type="button" onclick="move_mode('check')">预检</button>
-        <button type="button" onclick="move_mode('scan')">扫描</button></br>
-        <button type="button" onclick="move()">移动</button>
+        <p>
+            <span id="scan_info">[当前模式]:未选择</span>
+            <span id="move_info">[当前状态]:停止</span>
+        </p>
+        <p>
+            <button type="button" onclick="move_mode('check')">预检</button>
+            <button type="button" onclick="move_mode('scan')">扫描</button>
+        </p>
+        <p>
+            <button type="button" id="start_button" onclick="move()">启动</button>
+        </p>
+        
     </p>
     <p>
         <span>保存文件夹:</span><input type="text" id="save_folder" value="./", disabled></br>

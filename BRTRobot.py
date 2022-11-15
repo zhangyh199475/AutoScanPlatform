@@ -8,6 +8,7 @@ BRT_ip = "192.168.4.4"
 BRT_port = 9760
 BRT_speed = 60
 MovingCheckGap = 0.01
+socket.setdefaulttimeout(3)
 
 '''
     @description: 获取伯朗特机器人的世界坐标系

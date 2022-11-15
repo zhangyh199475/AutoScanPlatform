@@ -212,7 +212,7 @@ class Mission(threading.Thread):
                         self.MissionState = "saving"
                         # 重排列名
                         DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
-                        self.Data = self.Data[DataColumns].reset_index()
+                        self.Data = self.Data[DataColumns].reset_index(drop=True)
                         self.Data.to_csv(self.SaveFolder + "/" + self.SaveFile)
                     self.MissionState = "finished"
                 else: 
