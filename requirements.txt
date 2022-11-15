@@ -1,0 +1,6 @@
+pandas
+Flask
+scipy
+numpy
+json
+PyVisa
