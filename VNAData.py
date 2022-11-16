@@ -68,7 +68,7 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100):
         myPna.write("FORM:DATA ASCII")
 
         # Alter measure from S11 to S21
-        #myPna.write("CALC:PAR:MOD S21")
+        myPna.write("CALC:PAR:MOD S21")
 
         myPna.write("SENSe:SWEep:TYPE LIN")
 

@@ -86,12 +86,12 @@ def move_mode(move_mode):
         for i in paras_name: 
             paras.append(request.form.get(i))
         BRTMission.scan_mode(float(paras[0]), float(paras[1]), float(paras[2]), float(paras[3]), float(paras[4]), float(paras[5]), paras[6], check=check_flag)
-        BRTMission.ScanFrequency_min = request.form.get('f_min')
-        BRTMission.ScanFrequency_max = request.form.get('f_max')
-        BRTMission.ScanFrequency_step = request.form.get('f_step')
-        BRTMission.ScanRepeat = request.form.get('f_times')
-        BRTMission.SaveFolder = request.form.get('save_folder')
-        BRTMission.SaveFile = request.form.get('save_file')
+        BRTMission.f_min = request.form.get('f_min')
+        BRTMission.f_max = request.form.get('f_max')
+        BRTMission.f_step = request.form.get('f_step')
+        BRTMission.f_times = request.form.get('f_times')
+        BRTMission.save_folder = request.form.get('save_folder')
+        BRTMission.save_file = request.form.get('save_file')
         BRTMission.save_conf()
         return "DONE"
 

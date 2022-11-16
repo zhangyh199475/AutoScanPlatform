@@ -20,9 +20,16 @@ class Mission(threading.Thread):
         self.MovePoints = [] # 移动的点世界坐标
         self.CheckFlag = False # 检查标志位
         self.MoveFlag = False # 移动标志位
-        self.MissionState = "stop" # 移动状态，有stop, ready, finished, running
+        self.MissionState = "stop" # 移动状态，有stop, ready, finished, running, pause
         self.MoveNum = 0 # 移动到的点个数
 
+        # 任务设置相关变量
+        self.mission_conf = [
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
+            'mode', 
+            'f_min', 'f_max', 'f_step', 'f_times', 
+            'save_folder', 'save_file'
+        ]
         self.a_min = 0
         self.a_max = 0
         self.b_min = 0
@@ -30,15 +37,16 @@ class Mission(threading.Thread):
         self.a_step = 0
         self.b_step = 0
         self.mode = 'xOy'
-        self.ScanFrequency_min = 0 # 扫描频率最小值
-        self.ScanFrequency_max = 0 # 扫描频率最大值
-        self.ScanFrequency_step = 0 # 扫描频率步长
-        self.ScanRepeat = 1 # 扫描一点重复次数
-        self.SaveFolder = './'
-        self.SaveFile = 'tmp.csv'
+        self.f_min = 0 # 扫描频率最小值
+        self.f_max = 0 # 扫描频率最大值
+        self.f_step = 0 # 扫描频率步长
+        self.f_times = 1 # 扫描一点重复次数
+        self.save_folder = './'
+        self.save_file = 'tmp.csv'
         try: 
             self.load_conf()
             BRTRobot.setWorldCoordinate(self.OriginWorld)
+            BRTRobot.waitMoving()
         except: 
             pass
         pass
@@ -125,12 +133,12 @@ class Mission(threading.Thread):
         self.a_step = conf['a_step']
         self.b_step = conf['b_step']
         self.mode = conf['mode']
-        self.ScanFrequency_min = conf['f_min']
-        self.ScanFrequency_max = conf['f_max']
-        self.ScanFrequency_step = conf['f_step']
-        self.ScanRepeat = conf['f_times']
-        self.SaveFolder = conf['save_folder']
-        self.SaveFile = conf['save_file']
+        self.f_min = conf['f_min']
+        self.f_max = conf['f_max']
+        self.f_step = conf['f_step']
+        self.f_times = conf['f_times']
+        self.save_folder = conf['save_folder']
+        self.save_file = conf['save_file']
 
     '''
         @description: 保存配置
@@ -148,12 +156,12 @@ class Mission(threading.Thread):
         conf['a_step'] = self.a_step
         conf['b_step'] = self.b_step
         conf['mode'] = self.mode
-        conf['f_min'] = self.ScanFrequency_min
-        conf['f_max'] = self.ScanFrequency_max
-        conf['f_step'] = self.ScanFrequency_step
-        conf['f_times'] = self.ScanRepeat
-        conf['save_folder'] = self.SaveFolder
-        conf['save_file'] = self.SaveFile
+        conf['f_min'] = self.f_min
+        conf['f_max'] = self.f_max
+        conf['f_step'] = self.f_step
+        conf['f_times'] = self.f_times
+        conf['save_folder'] = self.save_folder
+        conf['save_file'] = self.save_file
         try: 
             conf_file = open('./MissionConf.json', 'w')
             json.dump(conf, conf_file, indent=4)
@@ -178,12 +186,12 @@ class Mission(threading.Thread):
         conf['a_step'] = self.a_step
         conf['b_step'] = self.b_step
         conf['mode'] = self.mode
-        conf['f_min'] = self.ScanFrequency_min
-        conf['f_max'] = self.ScanFrequency_max
-        conf['f_step'] = self.ScanFrequency_step
-        conf['f_times'] = self.ScanRepeat
-        conf['save_folder'] = self.SaveFolder
-        conf['save_file'] = self.SaveFile
+        conf['f_min'] = self.f_min
+        conf['f_max'] = self.f_max
+        conf['f_step'] = self.f_step
+        conf['f_times'] = self.f_times
+        conf['save_folder'] = self.save_folder
+        conf['save_file'] = self.save_file
         conf_json = json.dumps(conf)
         return conf_json
 
@@ -213,7 +221,7 @@ class Mission(threading.Thread):
                         # 重排列名
                         DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
                         self.Data = self.Data[DataColumns].reset_index(drop=True)
-                        self.Data.to_csv(self.SaveFolder + "/" + self.SaveFile)
+                        self.Data.to_csv(self.save_folder + "/" + self.save_file)
                     self.MissionState = "finished"
                 else: 
                     # 模式选择速度，预检比较快
@@ -232,9 +240,9 @@ class Mission(threading.Thread):
 
                     # 扫描模式获取数据
                     if (not self.CheckFlag): 
-                        for i in range(int(self.ScanRepeat)): 
-                            print("[Getting VNA Data]: ", self.ScanFrequency_min, self.ScanFrequency_max, self.ScanFrequency_step)
-                            PointVNAData = VNAData.get_vnadata(self.ScanFrequency_min, self.ScanFrequency_max, self.ScanFrequency_step)
+                        for i in range(int(self.f_times)): 
+                            print("[Getting VNA Data]: ", self.f_min, self.f_max, self.f_step)
+                            PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step)
                             PointVNADataName = ['Hz', 'R', 'I']
                             if (i == 0): 
                                 PdALLData = pd.DataFrame(data=PointVNAData, columns=PointVNADataName)

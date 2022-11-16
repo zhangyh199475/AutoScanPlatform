@@ -16,7 +16,12 @@ $(function()
 {
     $.post('/get_conf', {}, function(data,status){
         conf_json = JSON.parse(data);
-        var confs = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'f_min', 'f_max', 'f_step', 'f_times', 'save_folder', 'save_file'];
+        var confs = [
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
+            'mode', 
+            'f_min', 'f_max', 'f_step', 'f_times', 
+            'save_folder', 'save_file'
+        ];
         for (var i = 0, len = confs.length; i < len; i++) {
             document.getElementById(confs[i]).value = conf_json[confs[i]];
         }
@@ -64,7 +69,7 @@ function get_state(){
         state_to_text = {
             'stop': '[当前状态]:已停止', 
             'ready': '[当前状态]:已准备', 
-            'finished': '[当前状态]:已完成，请重新选择模式', 
+            'finished': '[当前状态]:已完成，请重新选择模式后启动', 
             'running': '[当前状态]:运行中'
         }
         state = JSON.parse(data)['state'];
@@ -73,7 +78,7 @@ function get_state(){
             document.getElementById("start_button").disabled = 'disable';
         }
         else {
-            delete document.getElementById("start_button").disabled;
+            delete document.getElementById("start_button").removeAttribute('disabled');
         }
     })
 }
@@ -117,8 +122,8 @@ function get_state(){
             <span id="move_info">[当前状态]:停止</span>
         </p>
         <p>
-            <button type="button" onclick="move_mode('check')">预检</button>
-            <button type="button" onclick="move_mode('scan')">扫描</button>
+            <button type="button" id="check_button" onclick="move_mode('check')">预检</button>
+            <button type="button" id="scan_button" onclick="move_mode('scan')">扫描</button>
         </p>
         <p>
             <button type="button" id="start_button" onclick="move()">启动</button>
