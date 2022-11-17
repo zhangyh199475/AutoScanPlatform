@@ -5,7 +5,7 @@ import BRTRobot
 from flask import request, Flask
 from Mission import Mission
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/resource', static_folder = './resource')
 BRTMission = None
 
 '''

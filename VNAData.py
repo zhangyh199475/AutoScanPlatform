@@ -112,11 +112,11 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100):
 
         # Close the VISA connection
         myPna.close()
-        return Data_res
+        return [True, Data_res]
 
     except Exception as err:
         print("[Get VNA Data Error]", err)
-        return [['NULL', 'NULL', 'NULL']]
+        return [False, ['NULL', 'NULL', 'NULL']]
     pass
 
 if __name__ == "__main__": 

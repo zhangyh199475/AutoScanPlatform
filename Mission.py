@@ -246,18 +246,29 @@ class Mission(threading.Thread):
                         BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
                         BRTRobot.waitMoving()
                     print(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld))
-                    BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
-                    BRTRobot.waitMoving()
+                    for i in range(5): 
+                        try: 
+                            BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
+                            BRTRobot.waitMoving()
+                            break
+                        except: 
+                            print('[ARM Connection Wrong]')
+                            continue
+
 
                     # 扫描模式获取数据
                     if (not self.CheckFlag): 
                         for i in range(int(self.f_times)): 
                             print("[Getting VNA Data]: ", self.f_min, self.f_max, self.f_step)
-                            PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step)
+                            for _ in range(5): 
+                                res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step)
+                                if (res): 
+                                    break
                             PointVNADataName = ['Hz', 'R', 'I']
                             if (i == 0): 
                                 PdALLData = pd.DataFrame(data=PointVNAData, columns=PointVNADataName)
                             else: 
+                                print(i)
                                 PdALLData = PdALLData.append(pd.DataFrame(data=PointVNAData, columns=PointVNADataName))
                         # 添加坐标列
                         PdALLData['x'] = self.MovePoints[self.MoveNum][0]
