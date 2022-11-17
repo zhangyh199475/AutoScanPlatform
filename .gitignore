@@ -1,0 +1,5 @@
+# path
+bin/
+
+# file
+*_test*

@@ -70,6 +70,15 @@ def get_conf():
     return BRTMission.get_conf()
 
 '''
+    @description: 保存配置
+    @param {}
+    @return {}
+'''
+@app.route('/save_conf', methods=['POST'])
+def save_conf(): 
+    return BRTMission.mission_initialize()
+
+'''
     @description: 预检或扫描api
     @param {}
     @return {}
@@ -103,14 +112,14 @@ def move_mode(move_mode):
 @app.route('/run', methods=['POST'])
 def run(): 
     if request.method == 'POST':
-        BRTMission.MoveFlag = not BRTMission.MoveFlag
+        # BRTMission.MoveFlag = not BRTMission.MoveFlag
         if (BRTMission.MissionState == 'running') : 
-            BRTMission.MissionState = 'stop'
-            BRTMission.MoveFlag = False
-        elif (BRTMission.MissionState == 'ready' or BRTMission.MissionState == 'stop') : 
+            BRTMission.MissionState = 'pause'
+            # BRTMission.MoveFlag = False
+        elif (BRTMission.MissionState == 'ready' or BRTMission.MissionState == 'pause') : 
             BRTMission.MissionState = 'running'
-            BRTMission.MoveFlag = True
-        print(BRTMission.MoveFlag)
+            # BRTMission.MoveFlag = True
+        # print(BRTMission.MoveFlag)
         return "DONE"
 
 '''
@@ -131,7 +140,6 @@ def state():
 @app.route('/mission', methods=['GET', "POST"])
 def MissionPage():
     if request.method == 'GET': 
-        BRTMission.mission_initialize()
         MissionPage_file = open('mission.html', 'r', encoding='utf-8')
         MissionPage_context = ''
         for i in MissionPage_file: 

@@ -22,13 +22,15 @@ class Mission(threading.Thread):
         self.MoveFlag = False # 移动标志位
         self.MissionState = "stop" # 移动状态，有stop, ready, finished, running, pause
         self.MoveNum = 0 # 移动到的点个数
+        self.MoveNumber = 0 # 需要移动到的点个数
+        self.CostTime = 0 # 已经花掉的时间
 
         # 任务设置相关变量
         self.mission_conf = [
-            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
-            'mode', 
-            'f_min', 'f_max', 'f_step', 'f_times', 
-            'save_folder', 'save_file'
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', # 移动距离相关变量
+            'mode', # 模式变量
+            'f_min', 'f_max', 'f_step', 'f_times', # vna数据读取相关变量
+            'save_folder', 'save_file' # 保存文件相关变量
         ]
         self.a_min = 0
         self.a_max = 0
@@ -90,6 +92,7 @@ class Mission(threading.Thread):
                     point[Mode_BIndex[self.mode]] = point[Mode_BIndex[self.mode]] + self.b_min + self.b_step * j
                     self.MovePoints.append(point)
             # self.MovePoints.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        print(self.MovePoints)
         print("[Move Points Setted]")
     
     '''
@@ -115,6 +118,7 @@ class Mission(threading.Thread):
         self.b_step = b_step
         self.mode = mode
         self.get_move_points()
+        self.MoveNumber = self.MovePoints.__len__()
     
     '''
         @description: 读取配置
@@ -192,6 +196,7 @@ class Mission(threading.Thread):
         conf['f_times'] = self.f_times
         conf['save_folder'] = self.save_folder
         conf['save_file'] = self.save_file
+        conf['save_file'] = self.save_file
         conf_json = json.dumps(conf)
         return conf_json
 
@@ -201,12 +206,17 @@ class Mission(threading.Thread):
         @return {}
     '''
     def get_state(self): 
-        state = {'state': self.MissionState}
+        state = {
+            'state': self.MissionState, 
+            'MoveNum': self.MoveNum, 
+            'MoveNumber': self.MoveNumber
+        }
         return json.dumps(state)
 
     def run(self): 
         while(1): 
-            if (self.MoveFlag): 
+            # if (self.MoveFlag): 
+            if (self.MissionState == 'running'): 
                 # 所有点移动完毕
                 if(self.MoveNum >= self.MovePoints.__len__()) : 
                     # 回到初始位置
@@ -214,7 +224,7 @@ class Mission(threading.Thread):
                     BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
                     BRTRobot.waitMoving()
                     print("[Move Finished]")
-                    self.MoveFlag = False
+                    # self.MoveFlag = False
                     # 扫描模式保存数据
                     if (not self.CheckFlag): 
                         self.MissionState = "saving"
@@ -235,6 +245,7 @@ class Mission(threading.Thread):
                     if (self.MoveNum == 0): 
                         BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
                         BRTRobot.waitMoving()
+                    print(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld))
                     BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
                     BRTRobot.waitMoving()
 
@@ -258,6 +269,14 @@ class Mission(threading.Thread):
                         else: 
                             self.Data = self.Data.append(PdALLData)
                         print(self.Data.shape)
+                        # 扫描模式保存数据
+                        if (self.MoveNum % 20 == 0): 
+                            if (not self.CheckFlag): 
+                                # 重排列名
+                                DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
+                                tmp_Data = self.Data.copy()
+                                tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
+                                tmp_Data.to_csv(self.save_folder + "/" + self.save_file)
                     self.MoveNum += 1
             else: 
                 sleep(1)

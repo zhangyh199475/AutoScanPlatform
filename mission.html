@@ -4,13 +4,6 @@
 <meta charset="utf-8">
 <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
 <script>
-// 定时执行函数
-var int=self.setInterval("interval_func()",500);
-function interval_func() {
-    mode_select();
-    get_state();
-}
-
 // 启动时加载配置
 $(function()
 {
@@ -27,6 +20,13 @@ $(function()
         }
     });
 });
+
+// 定时执行函数
+var int=self.setInterval("interval_func()",500);
+function interval_func() {
+    mode_select();
+    get_state();
+}
 
 // 根据选择框渲染页面
 function mode_select(){
@@ -61,24 +61,52 @@ function move_mode(move){
 
 // 返回上一页
 function back(){ window.location.href="/"; }
+
 // 启动
 function move(){ $.post('/run'); }
-// 获取当前状态
+
+// 回到设定的中心点
+function reset_center(){
+    $.post('/reset_center')
+}
+
+// 获取当前状态并渲染页面
 function get_state(){
     $.post('/state', data={}, function(data, status){
         state_to_text = {
             'stop': '[当前状态]:已停止', 
             'ready': '[当前状态]:已准备', 
             'finished': '[当前状态]:已完成，请重新选择模式后启动', 
-            'running': '[当前状态]:运行中'
+            'running': '[当前状态]:运行中',
+            'pause': '[当前状态]:已暂停'
         }
-        state = JSON.parse(data)['state'];
+        // 设定模式以及渲染按键状态
+        var state = JSON.parse(data)['state'];
         document.getElementById("move_info").innerHTML = state_to_text[state];
-        if (state == 'finished') {
+        if (state == 'finished' || state == 'stop') {
             document.getElementById("start_button").disabled = 'disable';
         }
         else {
-            delete document.getElementById("start_button").removeAttribute('disabled');
+            document.getElementById("start_button").removeAttribute('disabled');
+        }
+        if (state == 'running') {
+            document.getElementById("check_button").disabled = 'disable';
+            document.getElementById("scan_button").disabled = 'disable';
+            document.getElementById("start_button").innerHTML = '暂停';
+        }
+        else {
+            document.getElementById("check_button").removeAttribute('disabled');
+            document.getElementById("scan_button").removeAttribute('disabled');
+            document.getElementById("start_button").innerHTML = '启动';
+        }
+        // 设定进度
+        var MoveNum = JSON.parse(data)['MoveNum'];
+        var MoveNumber = JSON.parse(data)['MoveNumber'];
+        if (Number(MoveNum) == 0) {
+            document.getElementById("process_info").innerHTML = '[当前进度]:0.00%'; 
+        }
+        else {
+            document.getElementById("process_info").innerHTML = '[当前进度]:' + String((Number(MoveNum) / Number(MoveNumber) * 100).toFixed(2)) + "%"; 
         }
     })
 }
@@ -90,6 +118,7 @@ function get_state(){
 	<h1>自动扫场系统</h1>
 	<h2>任务设置</h2>
     <button type="button" onclick="back()">返回初始化</button>
+    <button type="button" onclick="reset_center()">回到中心点</button>
     <p>
         <select id='mode' onclick="mode_select()">
             <option value = "xOy">xOy</option>
@@ -120,6 +149,7 @@ function get_state(){
         <p>
             <span id="scan_info">[当前模式]:未选择</span>
             <span id="move_info">[当前状态]:停止</span>
+            <span id="process_info">[当前进度]:0.00%</span>
         </p>
         <p>
             <button type="button" id="check_button" onclick="move_mode('check')">预检</button>

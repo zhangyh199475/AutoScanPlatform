@@ -97,7 +97,7 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100):
 
 
         DataList = myTraceData.split(',')
-        FREQ_STEP = (FREQ_STOP - FREQ_START)/(numPoints)
+        FREQ_STEP = (FREQ_STOP - FREQ_START)/(numPoints - 1)
         Data_res = []
         for index in range(numPoints):
             data_tmp = [str(FREQ_START+FREQ_STEP*index), DataList[2*index], DataList[2*index+1]]
