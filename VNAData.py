@@ -22,7 +22,7 @@ import time
         float [[f, real, imaginary], ...] 获取到的数据，分为频率，实部，虚部
     }
 '''
-def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100): 
+def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100, S_mode = 'S21'): 
     try:
         f_min = int(f_min)
         f_max = int(f_max)
@@ -67,8 +67,15 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100):
         # Set data transfer format to ASCII
         myPna.write("FORM:DATA ASCII")
 
+        
         # Alter measure from S11 to S21
-        myPna.write("CALC:PAR:MOD S21")
+        S_mode_dict = {
+            'S11': "CALC:PAR:MOD S11", 
+            'S12': "CALC:PAR:MOD S12", 
+            'S21': "CALC:PAR:MOD S21", 
+            'S22': "CALC:PAR:MOD S22"
+        }
+        myPna.write(S_mode_dict[S_mode])
 
         myPna.write("SENSe:SWEep:TYPE LIN")
 

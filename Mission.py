@@ -8,7 +8,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from time import sleep
+from time import sleep, time
 
 class Mission(threading.Thread): 
     def __init__(self):
@@ -20,9 +20,10 @@ class Mission(threading.Thread):
         self.MovePoints = [] # 移动的点世界坐标
         self.CheckFlag = False # 检查标志位
         self.MoveFlag = False # 移动标志位
-        self.MissionState = "stop" # 移动状态，有stop, ready, finished, running, pause
+        self.MissionState = "stop" # 移动状态，有stop, ready, finished, running, pause, error
         self.MoveNum = 0 # 移动到的点个数
         self.MoveNumber = 0 # 需要移动到的点个数
+        self.OnePointTime = 0 # 一个点测量的时间
         self.CostTime = 0 # 已经花掉的时间
 
         # 任务设置相关变量
@@ -39,6 +40,7 @@ class Mission(threading.Thread):
         self.a_step = 0
         self.b_step = 0
         self.mode = 'xOy'
+        self.S_mode = "21"
         self.f_min = 0 # 扫描频率最小值
         self.f_max = 0 # 扫描频率最大值
         self.f_step = 0 # 扫描频率步长
@@ -119,6 +121,7 @@ class Mission(threading.Thread):
         self.mode = mode
         self.get_move_points()
         self.MoveNumber = self.MovePoints.__len__()
+        self.OnePointTime = 0
     
     '''
         @description: 读取配置
@@ -128,8 +131,8 @@ class Mission(threading.Thread):
     def load_conf(self): 
         conf_file = open('./MissionConf.json', 'r')
         conf = json.load(conf_file)
-        self.OriginWorld = conf['word_coordinate']
-        self.OriginJoint = conf['joint_coordinate'] 
+        self.OriginWorld = conf['OriginWorld']
+        self.OriginJoint = conf['OriginJoint'] 
         self.a_min = conf['a_min']
         self.a_max = conf['a_max']
         self.b_min = conf['b_min']
@@ -141,6 +144,7 @@ class Mission(threading.Thread):
         self.f_max = conf['f_max']
         self.f_step = conf['f_step']
         self.f_times = conf['f_times']
+        self.S_mode = conf['S_mode']
         self.save_folder = conf['save_folder']
         self.save_file = conf['save_file']
 
@@ -151,8 +155,8 @@ class Mission(threading.Thread):
     '''
     def save_conf(self): 
         conf = {}
-        conf['word_coordinate'] = list(self.OriginWorld)
-        conf['joint_coordinate'] = list(self.OriginJoint)
+        conf['OriginWorld'] = list(self.OriginWorld)
+        conf['OriginJoint'] = list(self.OriginJoint)
         conf['a_min'] = self.a_min
         conf['a_max'] = self.a_max
         conf['b_min'] = self.b_min
@@ -164,6 +168,7 @@ class Mission(threading.Thread):
         conf['f_max'] = self.f_max
         conf['f_step'] = self.f_step
         conf['f_times'] = self.f_times
+        conf['S_mode'] = self.S_mode
         conf['save_folder'] = self.save_folder
         conf['save_file'] = self.save_file
         try: 
@@ -181,8 +186,8 @@ class Mission(threading.Thread):
     '''
     def get_conf(self): 
         conf = {}
-        conf['word_coordinate'] = list(self.OriginWorld)
-        conf['joint_coordinate'] = list(self.OriginJoint)
+        conf['OriginWorld'] = list(self.OriginWorld)
+        conf['OriginJoint'] = list(self.OriginJoint)
         conf['a_min'] = self.a_min
         conf['a_max'] = self.a_max
         conf['b_min'] = self.b_min
@@ -194,6 +199,7 @@ class Mission(threading.Thread):
         conf['f_max'] = self.f_max
         conf['f_step'] = self.f_step
         conf['f_times'] = self.f_times
+        conf['S_mode'] = self.S_mode
         conf['save_folder'] = self.save_folder
         conf['save_file'] = self.save_file
         conf['save_file'] = self.save_file
@@ -209,7 +215,8 @@ class Mission(threading.Thread):
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
-            'MoveNumber': self.MoveNumber
+            'MoveNumber': self.MoveNumber, 
+            'OnePointTime': self.OnePointTime
         }
         return json.dumps(state)
 
@@ -234,34 +241,40 @@ class Mission(threading.Thread):
                         self.Data.to_csv(self.save_folder + "/" + self.save_file)
                     self.MissionState = "finished"
                 else: 
+                    if (self.MoveNum == 1): 
+                        start_time = time()
                     # 模式选择速度，预检比较快
                     if (self.CheckFlag): 
                         speed = 100
                     else: 
                         speed = 60
                     
-                    # 移动
+                    # 移动进入下一个点
                     self.MissionState = "running"
-                    if (self.MoveNum == 0): 
-                        BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
-                        BRTRobot.waitMoving()
-                    print(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld))
                     for i in range(5): 
                         try: 
+                            if (self.MoveNum == 0): 
+                                BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                                BRTRobot.waitMoving()
                             BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
                             BRTRobot.waitMoving()
                             break
                         except: 
-                            print('[ARM Connection Wrong]')
+                            if (i < 4) :
+                                print('[ARM Connection Wrong]: Retrying')
+                            else : 
+                                print('[ARM Connection Wrong]: Check your connection')
+                                self.MissionState = "error"
                             continue
-
+                    if (self.MissionState == "error") : 
+                        continue
 
                     # 扫描模式获取数据
                     if (not self.CheckFlag): 
                         for i in range(int(self.f_times)): 
                             print("[Getting VNA Data]: ", self.f_min, self.f_max, self.f_step)
                             for _ in range(5): 
-                                res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step)
+                                res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step, self.S_mode)
                                 if (res): 
                                     break
                             PointVNADataName = ['Hz', 'R', 'I']
@@ -288,6 +301,8 @@ class Mission(threading.Thread):
                                 tmp_Data = self.Data.copy()
                                 tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
                                 tmp_Data.to_csv(self.save_folder + "/" + self.save_file)
+                    if (self.MoveNum == 1): 
+                        self.OnePointTime = time() - start_time
                     self.MoveNum += 1
             else: 
                 sleep(1)

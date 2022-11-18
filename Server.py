@@ -99,6 +99,7 @@ def move_mode(move_mode):
         BRTMission.f_max = request.form.get('f_max')
         BRTMission.f_step = request.form.get('f_step')
         BRTMission.f_times = request.form.get('f_times')
+        BRTMission.S_mode = request.form.get('S_mode')
         BRTMission.save_folder = request.form.get('save_folder')
         BRTMission.save_file = request.form.get('save_file')
         BRTMission.save_conf()
@@ -116,7 +117,7 @@ def run():
         if (BRTMission.MissionState == 'running') : 
             BRTMission.MissionState = 'pause'
             # BRTMission.MoveFlag = False
-        elif (BRTMission.MissionState == 'ready' or BRTMission.MissionState == 'pause') : 
+        elif (BRTMission.MissionState == 'ready' or BRTMission.MissionState == 'pause' or BRTMission.MissionState == 'error') : 
             BRTMission.MissionState = 'running'
             # BRTMission.MoveFlag = True
         # print(BRTMission.MoveFlag)

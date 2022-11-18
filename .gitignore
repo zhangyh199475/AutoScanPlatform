@@ -1,5 +1,6 @@
 # path
 bin/
+Data/
 
 # file
 *_test*

@@ -12,7 +12,7 @@ $(function()
         var confs = [
             'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
             'mode', 
-            'f_min', 'f_max', 'f_step', 'f_times', 
+            'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
             'save_folder', 'save_file'
         ];
         for (var i = 0, len = confs.length; i < len; i++) {
@@ -43,7 +43,7 @@ function mode_select(){
 
 // 选择是预检模式还是扫描模式
 function move_mode(move){
-    var post_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'f_min', 'f_max', 'f_step', 'f_times', 'save_folder', 'save_file']
+    var post_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 'save_folder', 'save_file']
     var post_json = {}
     for (var i = 0, len = post_name.length; i < len; i++) {
         var tmp_value = document.getElementById(post_name[i]).value; 
@@ -78,7 +78,8 @@ function get_state(){
             'ready': '[当前状态]:已准备', 
             'finished': '[当前状态]:已完成，请重新选择模式后启动', 
             'running': '[当前状态]:运行中',
-            'pause': '[当前状态]:已暂停'
+            'pause': '[当前状态]:已暂停', 
+            'error': '[当前状态]:发生错误，请检查连接过后选择模式'
         }
         // 设定模式以及渲染按键状态
         var state = JSON.parse(data)['state'];
@@ -99,6 +100,7 @@ function get_state(){
             document.getElementById("scan_button").removeAttribute('disabled');
             document.getElementById("start_button").innerHTML = '启动';
         }
+
         // 设定进度
         var MoveNum = JSON.parse(data)['MoveNum'];
         var MoveNumber = JSON.parse(data)['MoveNumber'];
@@ -107,6 +109,27 @@ function get_state(){
         }
         else {
             document.getElementById("process_info").innerHTML = '[当前进度]:' + String((Number(MoveNum) / Number(MoveNumber) * 100).toFixed(2)) + "%"; 
+        }
+
+        // 设定时间信息
+        var OnePointTime = JSON.parse(data)['OnePointTime'];
+        if (Number(OnePointTime) == 0) {
+            document.getElementById("total_time").innerHTML = '[预计时间]:未知'; 
+            document.getElementById("remain_time").innerHTML = '[剩余时间]:未知'; 
+        }
+        else {
+            total_time = (Number(OnePointTime) * Number(MoveNumber));
+            remain_time = Number(OnePointTime) * (Number(MoveNumber) - Number(MoveNum));
+            total_time_h = parseInt(total_time / 60 / 60); 
+            total_time_m = parseInt(total_time / 60 - total_time_h * 60); 
+            total_time_s = parseInt(total_time - total_time_m * 60 - total_time_h * 60 * 60);
+            remain_time_h = parseInt(remain_time / 60 / 60); 
+            remain_time_m = parseInt(remain_time / 60 - remain_time_h * 60); 
+            remain_time_s = parseInt(remain_time - remain_time_m * 60 - remain_time_h * 60 * 60);
+            // document.getElementById("total_time").innerHTML = '[预计时间]:' + total_time.toString(); 
+            // document.getElementById("remain_time").innerHTML = '[剩余时间]:' + remain_time.toString(); 
+            document.getElementById("total_time").innerHTML = '[预计时间]:' + total_time_h.toString() + ':' + total_time_m.toString() + ':' + total_time_s.toString(); 
+            document.getElementById("remain_time").innerHTML = '[剩余时间]:' + remain_time_h.toString() + ':' + remain_time_m.toString() + ':' + remain_time_s.toString(); 
         }
     })
 }
@@ -144,12 +167,25 @@ function get_state(){
         最大值:<input type="text" id='f_max' value="200" style="width:60px;">
         采集点数:<input type="text" id='f_step' value="30" style="width:60px;">
         重复采集次数:<input type="text" id='f_times' value="30" style="width:60px;">
+        S参数模式选择
+        <select id='S_mode'>
+            <option value = "S11">S11</option>
+            <option value = "S12">S12</option>
+            <option value = "S21">S21</option>
+            <option value = "S22">S22</option>
+        </select>
     </p>
     <p>
         <p>
             <span id="scan_info">[当前模式]:未选择</span>
+        </p>
+        <p>
             <span id="move_info">[当前状态]:停止</span>
+        </p>
+        <p>
             <span id="process_info">[当前进度]:0.00%</span>
+            <span id="total_time">[预计时间]:未知</span>
+            <span id="remain_time">[剩余时间]:未知</span>
         </p>
         <p>
             <button type="button" id="check_button" onclick="move_mode('check')">预检</button>
