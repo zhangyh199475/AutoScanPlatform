@@ -23,14 +23,7 @@ def move_init():
         axis = request.form.get('axis')
         step = request.form.get('step')
         direct = request.form.get('direct')
-        axis_dict = {
-            "x": 0, 
-            "y": 1, 
-            "z": 2, 
-            "u": 3,
-            "v": 4, 
-            "w": 5
-        }
+        axis_dict = {"x": 0, "y": 1, "z": 2, "u": 3, "v": 4, "w": 5 }
         WordCoordinate_now = BRTRobot.getWorldCoordinate()
         WordCoordinate_now[axis_dict[axis]] += float(step) * float(direct)
         print(WordCoordinate_now)
@@ -50,7 +43,7 @@ def reset():
     return "DONE"
 
 '''
-    @description: 复位中心api
+    @description: 复位中心api，反复使用可能会带来误差
     @param {}
     @return {}
 '''
@@ -106,21 +99,17 @@ def move_mode(move_mode):
         return "DONE"
 
 '''
-    @description: 移动api
+    @description: 移动api, 通过改变状态实现
     @param {}
     @return {}
 '''
 @app.route('/run', methods=['POST'])
 def run(): 
     if request.method == 'POST':
-        # BRTMission.MoveFlag = not BRTMission.MoveFlag
         if (BRTMission.MissionState == 'running') : 
             BRTMission.MissionState = 'pause'
-            # BRTMission.MoveFlag = False
         elif (BRTMission.MissionState == 'ready' or BRTMission.MissionState == 'pause' or BRTMission.MissionState == 'error') : 
             BRTMission.MissionState = 'running'
-            # BRTMission.MoveFlag = True
-        # print(BRTMission.MoveFlag)
         return "DONE"
 
 '''
