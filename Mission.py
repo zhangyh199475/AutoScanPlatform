@@ -49,8 +49,16 @@ class Mission(threading.Thread):
         self.save_file = 'tmp.csv'
         try: 
             self.load_conf()
-            BRTRobot.setWorldCoordinate(self.OriginWorld)
-            BRTRobot.waitMoving()
+            for i in range(5): 
+                ret = BRTRobot.setWorldCoordinate(self.OriginWorld)
+                BRTRobot.waitMoving()
+                if (ret): 
+                    break
+                elif (i == 4): 
+                    self.MissionState = "error"
+                    print('[ARM Connection Wrong]: Check your connection')
+                else: 
+                    print('[ARM Connection Wrong]: Retrying')
         except: 
             pass
         pass
@@ -61,8 +69,12 @@ class Mission(threading.Thread):
         @return {}
     '''
     def mission_initialize(self): 
-        self.OriginWorld = BRTRobot.getWorldCoordinate()
-        self.OriginJoint = BRTRobot.getJointCoordinate()
+        ret1, self.OriginWorld = BRTRobot.getWorldCoordinate()
+        ret2, self.OriginJoint = BRTRobot.getJointCoordinate()
+        if not (ret1 and ret2): 
+            self.MissionState = "error"
+            print('[ARM Connection Wrong]: Check your connection')
+
     
     '''
         @description: 获取沿xOy, xOz, yOz平面移动各个边的step点
@@ -77,23 +89,21 @@ class Mission(threading.Thread):
         Mode_BIndex = {'xOy': 1, 'xOz': 2, 'yOz': 2}
 
         if (self.CheckFlag): 
+            # 预检模式移动到初始框的四个点
             point_bias = [(0, 0), (0, 1), (1, 1), (1, 0)]
             for i in point_bias: 
-                # point = self.OriginWorld.copy()
                 point = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                 point[Mode_AIndex[self.mode]] = point[Mode_AIndex[self.mode]] + self.a_min + self.a_step *AStep_num * i[0]
                 point[Mode_BIndex[self.mode]] = point[Mode_BIndex[self.mode]] + self.b_min + self.b_step *BStep_num * i[1]
                 self.MovePoints.append(point)
-            # self.MovePoints.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         else: 
+            # 扫描模式移动到初始框的所有点
             for i in range(AStep_num): 
                 for j in range(BStep_num): 
-                    # point = self.OriginWorld.copy()
                     point = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                     point[Mode_AIndex[self.mode]] = point[Mode_AIndex[self.mode]] + self.a_min + self.a_step * i
                     point[Mode_BIndex[self.mode]] = point[Mode_BIndex[self.mode]] + self.b_min + self.b_step * j
                     self.MovePoints.append(point)
-            # self.MovePoints.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         print(self.MovePoints)
         print("[Move Points Setted]")
     
@@ -107,18 +117,13 @@ class Mission(threading.Thread):
         }
         @return {}
     '''
-    def scan_mode(self, a_min=0.0, a_max=0.0, b_min=0.0, b_max=0.0, a_step=5.0, b_step=5.0, mode='xOy', check = True): 
-        self.CheckFlag = check
+    def scan_mode(self, a_min=0.0, a_max=0.0, b_min=0.0, b_max=0.0, a_step=5.0, b_step=5.0, mode='xOy', CheckFlag = True): 
+        para_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'CheckFlag']
+        for i in para_name: 
+            exec('self.{} = {}'.format(i, i))
         self.MissionState = 'ready'
         self.MoveNum = 0
         self.Data = None
-        self.a_min = a_min
-        self.a_max = a_max
-        self.b_min = b_min
-        self.b_max = b_max
-        self.a_step = a_step
-        self.b_step = b_step
-        self.mode = mode
         self.get_move_points()
         self.MoveNumber = self.MovePoints.__len__()
         self.OnePointTime = 0
@@ -131,22 +136,15 @@ class Mission(threading.Thread):
     def load_conf(self): 
         conf_file = open('./MissionConf.json', 'r')
         conf = json.load(conf_file)
-        self.OriginWorld = conf['OriginWorld']
-        self.OriginJoint = conf['OriginJoint'] 
-        self.a_min = conf['a_min']
-        self.a_max = conf['a_max']
-        self.b_min = conf['b_min']
-        self.b_max = conf['b_max']
-        self.a_step = conf['a_step']
-        self.b_step = conf['b_step']
-        self.mode = conf['mode']
-        self.f_min = conf['f_min']
-        self.f_max = conf['f_max']
-        self.f_step = conf['f_step']
-        self.f_times = conf['f_times']
-        self.S_mode = conf['S_mode']
-        self.save_folder = conf['save_folder']
-        self.save_file = conf['save_file']
+        conf_name = [
+            'OriginWorld', 'OriginJoint', 
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
+            'mode', 
+            'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
+            'save_folder', 'save_file'
+        ]
+        for i in conf_name: 
+            exec('self.{} = conf[\'{}\']'.format(i, i))
 
     '''
         @description: 保存配置
@@ -155,27 +153,19 @@ class Mission(threading.Thread):
     '''
     def save_conf(self): 
         conf = {}
-        conf['OriginWorld'] = list(self.OriginWorld)
-        conf['OriginJoint'] = list(self.OriginJoint)
-        conf['a_min'] = self.a_min
-        conf['a_max'] = self.a_max
-        conf['b_min'] = self.b_min
-        conf['b_max'] = self.b_max
-        conf['a_step'] = self.a_step
-        conf['b_step'] = self.b_step
-        conf['mode'] = self.mode
-        conf['f_min'] = self.f_min
-        conf['f_max'] = self.f_max
-        conf['f_step'] = self.f_step
-        conf['f_times'] = self.f_times
-        conf['S_mode'] = self.S_mode
-        conf['save_folder'] = self.save_folder
-        conf['save_file'] = self.save_file
+        conf_name = [
+            'OriginWorld', 'OriginJoint', 
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
+            'mode', 
+            'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
+            'save_folder', 'save_file'
+        ]
+        for i in conf_name: 
+            exec('conf[\'{}\'] = self.{}'.format(i, i))
         try: 
             conf_file = open('./MissionConf.json', 'w')
             json.dump(conf, conf_file, indent=4)
             print("[Save Configure Success]")
-            pass
         except: 
             print("[Save Configure Failed]")
 
@@ -186,23 +176,15 @@ class Mission(threading.Thread):
     '''
     def get_conf(self): 
         conf = {}
-        conf['OriginWorld'] = list(self.OriginWorld)
-        conf['OriginJoint'] = list(self.OriginJoint)
-        conf['a_min'] = self.a_min
-        conf['a_max'] = self.a_max
-        conf['b_min'] = self.b_min
-        conf['b_max'] = self.b_max
-        conf['a_step'] = self.a_step
-        conf['b_step'] = self.b_step
-        conf['mode'] = self.mode
-        conf['f_min'] = self.f_min
-        conf['f_max'] = self.f_max
-        conf['f_step'] = self.f_step
-        conf['f_times'] = self.f_times
-        conf['S_mode'] = self.S_mode
-        conf['save_folder'] = self.save_folder
-        conf['save_file'] = self.save_file
-        conf['save_file'] = self.save_file
+        conf_name = [
+            'OriginWorld', 'OriginJoint', 
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
+            'mode', 
+            'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
+            'save_folder', 'save_file'
+        ]
+        for i in conf_name: 
+            exec('conf[\'{}\'] = self.{}'.format(i, i))
         conf_json = json.dumps(conf)
         return conf_json
 
@@ -211,12 +193,26 @@ class Mission(threading.Thread):
         @param {}
         @return {}
     '''
-    def get_state(self): 
+    def get_state(self):
+        TotalTime = self.OnePointTime * self.MoveNumber
+        TotalTimeH = int(TotalTime) % 60
+        TotalTimeM = int(TotalTime - TotalTimeH * 60) % 60
+        TotalTimeS = int(TotalTime - TotalTimeH * 60 * 60 - TotalTimeM * 60) % 60
+        LeftTime = self.OnePointTime * (self.MoveNumber - self.MoveNum)
+        LeftTimeH = int(LeftTime) % 60
+        LeftTimeM = int(LeftTime - LeftTimeH * 60) % 60
+        LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60) % 60
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
             'MoveNumber': self.MoveNumber, 
-            'OnePointTime': self.OnePointTime
+            'OnePointTime': self.OnePointTime, 
+            'TotalTimeH' = TotalTimeH, 
+            'TotalTimeM' = TotalTimeM, 
+            'TotalTimeS' = TotalTimeS, 
+            'LeftTimeH' = LeftTimeH, 
+            'LeftTimeM' = LeftTimeM, 
+            'LeftTimeS' = LeftTimeS
         }
         return json.dumps(state)
 
@@ -252,20 +248,17 @@ class Mission(threading.Thread):
                     # 移动进入下一个点
                     self.MissionState = "running"
                     for i in range(5): 
-                        try: 
-                            if (self.MoveNum == 0): 
-                                BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
-                                BRTRobot.waitMoving()
-                            BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
-                            BRTRobot.waitMoving()
+                        ret1 = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                        BRTRobot.waitMoving()
+                        ret2 = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
+                        BRTRobot.waitMoving()
+                        if (ret1 and ret2) : 
                             break
-                        except: 
-                            if (i < 4) :
-                                print('[ARM Connection Wrong]: Retrying')
-                            else : 
-                                print('[ARM Connection Wrong]: Check your connection')
-                                self.MissionState = "error"
-                            continue
+                        elif (i < 4) :
+                            print('[ARM Connection Wrong]: Retrying')
+                        else : 
+                            print('[ARM Connection Wrong]: Check your connection')
+                            self.MissionState = "error"
                     if (self.MissionState == "error") : 
                         continue
 
