@@ -209,7 +209,7 @@ def judgeWorldCoordinate(x, y, z, u, v, w):
     if (R_XY < 230): 
         if (WristZ < (415.5 + 230)): 
             return False
-    elif (R_XY >= 230 and R_XY <= 860)
+    elif (R_XY >= 230 and R_XY <= 860):
         if ((WristZ <= 50) or (WristZ <= (415.5 - sqrt(410**2 - (390 + 70 - R_XY)**2)))): 
             return False
     elif (R_XY > 860): 
