@@ -38,7 +38,7 @@ def getWorldCoordinate():
         WorldCoordinate = json.loads(WorldCoordinate_msg)["queryData"]
         print("[World Coordinate]:", WorldCoordinate)
         BRT_connector.close()
-        return [True, np.array(WorldCoordinate).astype(np.float64)]
+        return [True, list(np.array(WorldCoordinate).astype(np.float64))]
     except: 
         return [False, None]
 
@@ -65,7 +65,7 @@ def getJointCoordinate():
         JointCoordinate = json.loads(JointCoordinate_msg)["queryData"]
         print("[Joint Coordinate]:", JointCoordinate)
         BRT_connector.close()
-        return [True, np.array(JointCoordinate).astype(np.float64)]
+        return [True, list(np.array(JointCoordinate).astype(np.float64))]
     except: 
         return [False, None]
 
