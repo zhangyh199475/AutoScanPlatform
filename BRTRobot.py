@@ -1,6 +1,9 @@
+#coding:utf-8
 import socket
 import json
 import numpy as np
+
+from Arm import Arm
 from time import sleep
 
 # 机器人连接设置
@@ -9,6 +12,8 @@ BRT_port = 9760 # 机器人默认端口
 BRT_speed = 60 # 机器人默认移动速度
 MovingCheckGap = 0.01 # 检查机器人移动状态间隔
 socket.setdefaulttimeout(3) # 连接检测默认最长时间
+BRTArm = Arm(Calibrate = True)
+
 
 '''
     @description: 获取伯朗特机器人的世界坐标系
@@ -188,28 +193,33 @@ def waitMoving():
 '''
     @description: 获取当前位置可移动的范围
     @param {
-        float x, y, z, a_min, a_max, b_min, b_max, mod: 当前坐标x, y, z, 移动范围a, b值最小值最大值, 模式
+        float x, y, z, u, v, w: 需要判断的世界坐标系值
     }
     @return {
-        
+        bool res: 当前输入的值是否合法，True合法，False不合法
     }
 '''
-def getRange(x, y, z, a_min, a_max, b_min, b_max, mod='xOy'): 
-    if (mod == 'xOy'): 
-        return getRange_xOy(x, y, z, a_min, a_max, b_min, b_max)
-    elif (mod == 'xOz'): 
-        return getRange_xOz(x, y, z, a_min, a_max, b_min, b_max) 
-    else: 
-        return getRange_yOz(x, y, z, a_min, a_max, b_min, b_max)
+def judgeWorldCoordinate(x, y, z, u, v, w):
+    # 获取腕部XYZ世界坐标
+    WristX, WristY, WristZ = BRTArm.getWristCoordinate(x, y, z, u, v, w)
+    # 判断Z轴是否合法
+    R_XY = sqrt(WristX**2 + WristY**2) # xOy平面上直线长度
+    if (WristZ > (415.5 + sqrt(800**2 - (R_XY - 70)**2))): 
+        return False
+    if (R_XY < 230): 
+        if (WristZ < (415.5 + 230)): 
+            return False
+    elif (R_XY >= 230 and R_XY <= 860)
+        if ((WristZ <= 50) or (WristZ <= (415.5 - sqrt(410**2 - (390 + 70 - R_XY)**2)))): 
+            return False
+    elif (R_XY > 860): 
+        return False
+    return True
+    # 判断XY轴是否合法, 这一段代码暂时不到达，因为似乎不用判断XY轴合法问题
+    if (WristZ < (415.5 + 230)): 
+        if ((R_XY < 230) or (R_XY > sqrt())): 
+            pass
 
-def getRange_xOy(x, y, z, a_min, a_max, b_min, b_max):
-    pass
-
-def getRange_xOz(x, y, z, a_min, a_max, b_min, b_max):
-    pass
-
-def getRange_yOz(x, y, z, a_min, a_max, b_min, b_max):
-    pass
 
 if __name__ == "__main__": 
     getWorldCoordinate()
