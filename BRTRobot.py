@@ -5,6 +5,7 @@ import numpy as np
 
 from Arm import Arm
 from time import sleep
+from math import sqrt
 
 # 机器人连接设置
 BRT_ip = "192.168.4.4" # 机器人默认IP
@@ -199,23 +200,24 @@ def waitMoving():
         bool res: 当前输入的值是否合法，True合法，False不合法
     }
 '''
-def judgeWorldCoordinate(x, y, z, u, v, w):
+def judgeWorldCoordinate(Coordinate):
+    [x, y, z, u, v, w] = Coordinate 
     # 获取腕部XYZ世界坐标
     WristX, WristY, WristZ = BRTArm.getWristCoordinate(x, y, z, u, v, w)
     # 判断Z轴是否合法
     R_XY = sqrt(WristX**2 + WristY**2) # xOy平面上直线长度
-    if (WristZ > (415.5 + sqrt(800**2 - (R_XY - 70)**2))): 
+    if (R_XY > 870): 
         return False
-    if (R_XY < 230): 
-        if (WristZ < (415.5 + 230)): 
-            return False
-    elif (R_XY >= 230 and R_XY <= 860):
+    elif (R_XY >= 260 and R_XY <= 870):
         if ((WristZ <= 50) or (WristZ <= (415.5 - sqrt(410**2 - (390 + 70 - R_XY)**2)))): 
             return False
-    elif (R_XY > 860): 
+    elif (R_XY < 260): 
+        if (WristZ < (415.5 + 200)): 
+            return False
+    if (WristZ > (415.5 + sqrt(800**2 - (R_XY - 70)**2))): 
         return False
     return True
-    # 判断XY轴是否合法, 这一段代码暂时不到达，因为似乎不用判断XY轴合法问题
+    # 判断XY轴是否合法
     if (WristZ < (415.5 + 230)): 
         if ((R_XY < 230) or (R_XY > sqrt())): 
             pass

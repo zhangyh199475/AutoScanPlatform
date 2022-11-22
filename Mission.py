@@ -215,6 +215,79 @@ class Mission(threading.Thread):
         }
         return json.dumps(state)
 
+    '''
+        @description: 获取配置
+        @param {
+            float a_min, a_max, b_min, b_max: 第一个和第二个参数的
+        }
+        @return {}
+    '''
+    def get_range(self, a_min, a_max): 
+        a_min = float(a_min)
+        a_max = float(a_max)
+        a_min_available = 0
+        a_max_available = 0
+        b_min_available = 0
+        b_max_available = 0
+        Mode_AIndex = {'xOy': 0, 'xOz': 0, 'yOz': 1}
+        Mode_BIndex = {'xOy': 1, 'xOz': 2, 'yOz': 2}
+        # 获得a变量可以到达的最小值
+        while(a_min_available > -2000): 
+            point = self.OriginWorld.copy()
+            point[Mode_AIndex[self.mode]] = point[Mode_AIndex[self.mode]] + a_min_available
+            if (BRTRobot.judgeWorldCoordinate(point)): 
+                a_min_available -= 5.0
+            else: 
+                a_min_available += 5.0
+                break
+        # 获得a变量可以到达的最大值
+        while(a_max_available < 2000): 
+            point = self.OriginWorld.copy()
+            point[Mode_AIndex[self.mode]] = point[Mode_AIndex[self.mode]] + a_max_available
+            if (BRTRobot.judgeWorldCoordinate(point)): 
+                a_max_available += 5.0
+            else: 
+                a_max_available -= 5.0
+                break
+        # 获得b变量可以到达的最小值
+        while(b_min_available > -2000): 
+            point1 = self.OriginWorld.copy()
+            point1[Mode_BIndex[self.mode]] = point1[Mode_BIndex[self.mode]] + b_min_available
+            point2 = self.OriginWorld.copy()
+            point2[Mode_AIndex[self.mode]] = point2[Mode_AIndex[self.mode]] + a_min
+            point2[Mode_BIndex[self.mode]] = point2[Mode_BIndex[self.mode]] + b_min_available
+            point3 = self.OriginWorld.copy()
+            point3[Mode_AIndex[self.mode]] = point3[Mode_AIndex[self.mode]] + a_max
+            point3[Mode_BIndex[self.mode]] = point3[Mode_BIndex[self.mode]] + b_min_available
+            if (BRTRobot.judgeWorldCoordinate(point1) and BRTRobot.judgeWorldCoordinate(point2) and BRTRobot.judgeWorldCoordinate(point3)): 
+                b_min_available -= 5.0
+            else: 
+                b_min_available += 5.0
+                break
+        # 获得b变量可以到达的最大值
+        while(b_max_available < 2000): 
+            point1 = self.OriginWorld.copy()
+            point1[Mode_BIndex[self.mode]] = point1[Mode_BIndex[self.mode]] + b_max_available
+            point2 = self.OriginWorld.copy()
+            point2[Mode_AIndex[self.mode]] = point2[Mode_AIndex[self.mode]] + a_min
+            point2[Mode_BIndex[self.mode]] = point2[Mode_BIndex[self.mode]] + b_max_available
+            point3 = self.OriginWorld.copy()
+            point3[Mode_AIndex[self.mode]] = point3[Mode_AIndex[self.mode]] + a_max
+            point3[Mode_BIndex[self.mode]] = point3[Mode_BIndex[self.mode]] + b_max_available
+            if (BRTRobot.judgeWorldCoordinate(point1) and BRTRobot.judgeWorldCoordinate(point2) and BRTRobot.judgeWorldCoordinate(point3)): 
+                b_max_available += 5.0
+            else: 
+                b_max_available -= 5.0
+                break
+        available_range = {
+            'a_min_available': a_min_available, 
+            'a_max_available': a_max_available, 
+            'b_min_available': b_min_available, 
+            'b_max_available': b_max_available
+        }
+        return json.dumps(available_range)
+        pass
+
     def run(self): 
         while(1): 
             # if (self.MoveFlag): 

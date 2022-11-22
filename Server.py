@@ -123,6 +123,17 @@ def state():
         return BRTMission.get_state()
 
 '''
+    @description: 范围api
+    @param {}
+    @return {}
+'''
+@app.route('/range', methods=['POST'])
+def range(): 
+    if request.method == 'POST':
+        a_min = request.form.get('a_min')
+        a_max = request.form.get('a_max')
+        return BRTMission.get_range(a_min, a_max)
+'''
     @description: 任务设置页
     @param {}
     @return {}

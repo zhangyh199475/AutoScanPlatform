@@ -20,6 +20,7 @@ var int=self.setInterval("interval_func()",500);
 function interval_func() {
     mode_select();
     get_state();
+    get_range();
 }
 
 // 根据选择框渲染页面
@@ -121,5 +122,20 @@ function get_state(){
             document.getElementById("total_time").innerHTML = '[预计时间]:' + total_time_h.toString() + ':' + total_time_m.toString() + ':' + total_time_s.toString(); 
             document.getElementById("left_time").innerHTML = '[剩余时间]:' + left_time_h.toString() + ':' + left_time_m.toString() + ':' + left_time_s.toString(); 
         }
+    })
+}
+
+// 
+function get_range(){
+    var a_min = document.getElementById('a_min').value;
+    var a_max = document.getElementById('a_max').value;
+    var post_json = {'a_min': a_min, 'a_max': a_max}
+    $.post('/range', post_json, function(data, status){
+        var a_min_available = JSON.parse(data)['a_min_available'];
+        var a_max_available = JSON.parse(data)['a_max_available'];
+        var b_min_available = JSON.parse(data)['b_min_available'];
+        var b_max_available = JSON.parse(data)['b_max_available'];
+        document.getElementById("a_available").innerHTML = '[范围]: [ ' + a_min_available.toString() + ' ~ ' + a_max_available.toString() + ' ]'; 
+        document.getElementById("b_available").innerHTML = '[范围]: [ ' + b_min_available.toString() + ' ~ ' + b_max_available.toString() + ' ]'; 
     })
 }
