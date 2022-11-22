@@ -207,12 +207,12 @@ class Mission(threading.Thread):
             'MoveNum': self.MoveNum, 
             'MoveNumber': self.MoveNumber, 
             'OnePointTime': self.OnePointTime, 
-            'TotalTimeH' = TotalTimeH, 
-            'TotalTimeM' = TotalTimeM, 
-            'TotalTimeS' = TotalTimeS, 
-            'LeftTimeH' = LeftTimeH, 
-            'LeftTimeM' = LeftTimeM, 
-            'LeftTimeS' = LeftTimeS
+            'TotalTimeH': TotalTimeH, 
+            'TotalTimeM': TotalTimeM, 
+            'TotalTimeS': TotalTimeS, 
+            'LeftTimeH': LeftTimeH, 
+            'LeftTimeM': LeftTimeM, 
+            'LeftTimeS': LeftTimeS
         }
         return json.dumps(state)
 
