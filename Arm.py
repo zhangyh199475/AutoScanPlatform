@@ -1,3 +1,4 @@
+#coding:utf-8
 from cmath import acos, pi, sqrt
 import json
 from re import T
@@ -73,7 +74,7 @@ class Arm:
             float [WristX, WristY, WristZ]: 腕部世界坐标(x, y, z)
         }
     '''
-    def __getWristCoordinate(self, x, y, z, u, v, w): 
+    def getWristCoordinate(self, x, y, z, u, v, w): 
         # 将xyz欧拉角转换成zyx欧拉角（先x，后y最后z），最后转动z轴更好计算末端z轴和世界坐标系x, y, z的夹角余弦
         # xyz一般用u, v, w表示，zxy一般用alpha, beta, gamma表示，即pitch, roll, yaw
         R_Matrix = R.from_euler('xyz', [u, v, w], degrees=True).as_matrix()
@@ -118,7 +119,7 @@ class Arm:
         for i in Eulers: 
             WorldCoordinate.append(i) 
         
-        # print(self.__getWristCoordinate(WorldCoordinate[0], WorldCoordinate[1], WorldCoordinate[2], WorldCoordinate[3], WorldCoordinate[4], WorldCoordinate[5]))
+        # print(self.getWristCoordinate(WorldCoordinate[0], WorldCoordinate[1], WorldCoordinate[2], WorldCoordinate[3], WorldCoordinate[4], WorldCoordinate[5]))
         return WorldCoordinate
 
     '''
@@ -131,7 +132,7 @@ class Arm:
         }
     '''
     def armIK(self, x = 0.0, y = 0.0, z = 0.0, u = 0.0, v = 0.0, w = 0.0):
-        [WristX, WristY, WristZ] = self.__getWristCoordinate(x, y, z, u, v, w)
+        [WristX, WristY, WristZ] = self.getWristCoordinate(x, y, z, u, v, w)
 
         L_23 = self.DH_a[1]
         L_34 = sqrt(self.DH_a[2]**2 + self.DH_d[3]**2).real
