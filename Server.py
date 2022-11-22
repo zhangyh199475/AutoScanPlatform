@@ -24,7 +24,7 @@ def move_init():
         step = request.form.get('step')
         direct = request.form.get('direct')
         axis_dict = {"x": 0, "y": 1, "z": 2, "u": 3, "v": 4, "w": 5 }
-        WordCoordinate_now = BRTRobot.getWorldCoordinate()
+        _, WordCoordinate_now = BRTRobot.getWorldCoordinate()
         WordCoordinate_now[axis_dict[axis]] += float(step) * float(direct)
         print(WordCoordinate_now)
         BRTRobot.setWorldCoordinate(WorldCoordinate=WordCoordinate_now)
@@ -87,7 +87,7 @@ def move_mode(move_mode):
         paras_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode']
         for i in paras_name: 
             paras.append(request.form.get(i))
-        BRTMission.scan_mode(float(paras[0]), float(paras[1]), float(paras[2]), float(paras[3]), float(paras[4]), float(paras[5]), paras[6], check=check_flag)
+        BRTMission.scan_mode(float(paras[0]), float(paras[1]), float(paras[2]), float(paras[3]), float(paras[4]), float(paras[5]), paras[6], CheckFlag=check_flag)
         BRTMission.f_min = request.form.get('f_min')
         BRTMission.f_max = request.form.get('f_max')
         BRTMission.f_step = request.form.get('f_step')

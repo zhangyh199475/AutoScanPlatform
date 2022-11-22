@@ -104,7 +104,6 @@ class Mission(threading.Thread):
                     point[Mode_AIndex[self.mode]] = point[Mode_AIndex[self.mode]] + self.a_min + self.a_step * i
                     point[Mode_BIndex[self.mode]] = point[Mode_BIndex[self.mode]] + self.b_min + self.b_step * j
                     self.MovePoints.append(point)
-        print(self.MovePoints)
         print("[Move Points Setted]")
     
     '''
@@ -195,13 +194,13 @@ class Mission(threading.Thread):
     '''
     def get_state(self):
         TotalTime = self.OnePointTime * self.MoveNumber
-        TotalTimeH = int(TotalTime) % 60
-        TotalTimeM = int(TotalTime - TotalTimeH * 60) % 60
-        TotalTimeS = int(TotalTime - TotalTimeH * 60 * 60 - TotalTimeM * 60) % 60
+        TotalTimeH = int(TotalTime / 60 / 60)
+        TotalTimeM = int((TotalTime - TotalTimeH * 60 * 60) / 60)
+        TotalTimeS = int(TotalTime - TotalTimeH * 60 * 60 - TotalTimeM * 60)
         LeftTime = self.OnePointTime * (self.MoveNumber - self.MoveNum)
-        LeftTimeH = int(LeftTime) % 60
-        LeftTimeM = int(LeftTime - LeftTimeH * 60) % 60
-        LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60) % 60
+        LeftTimeH = int(LeftTime / 60 / 60)
+        LeftTimeM = int((LeftTime - LeftTimeH * 60 * 60) / 60)
+        LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60)
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
@@ -248,11 +247,12 @@ class Mission(threading.Thread):
                     # 移动进入下一个点
                     self.MissionState = "running"
                     for i in range(5): 
-                        ret1 = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                        if self.MoveNum == 0: 
+                            ret = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                            BRTRobot.waitMoving()
+                        ret = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
                         BRTRobot.waitMoving()
-                        ret2 = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
-                        BRTRobot.waitMoving()
-                        if (ret1 and ret2) : 
+                        if (ret) : 
                             break
                         elif (i < 4) :
                             print('[ARM Connection Wrong]: Retrying')
@@ -303,7 +303,6 @@ class Mission(threading.Thread):
 
 
 if __name__ == "__main__": 
-    print("asdf")
     BRTMission = Mission()
     BRTRobot.setJointCoordinate([0, -30, -30, 0, 60, 0])
     BRTRobot.waitMoving()
