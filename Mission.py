@@ -321,11 +321,11 @@ class Mission(threading.Thread):
                     self.MissionState = "running"
                     for i in range(5): 
                         if self.MoveNum == 0: 
-                            ret = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
-                            BRTRobot.waitMoving()
-                        ret = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
-                        BRTRobot.waitMoving()
-                        if (ret) : 
+                            res1 = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                            res2 = BRTRobot.waitMoving()
+                        res3 = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
+                        res4 = BRTRobot.waitMoving()
+                        if (res1 and res2 and res3 and res4) : 
                             break
                         elif (i < 4) :
                             print('[ARM Connection Wrong]: Retrying')

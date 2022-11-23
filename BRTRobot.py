@@ -180,7 +180,9 @@ def setJointCoordinate(JointCoordinate):
 '''
     @description: 等待移动结束
     @param {}
-    @return {}
+    @return {
+        ret: 获取信息是否成功，成功True，失败False
+    }
 '''
 def waitMoving(): 
     while(1): 
@@ -188,8 +190,10 @@ def waitMoving():
         ret, state = getMoveState()
         if(not ret): 
             print('[Get Move State False]: Can\'t get move state')
+            return False
         if(not state): 
             break
+    return True
 
 '''
     @description: 获取当前位置可移动的范围
