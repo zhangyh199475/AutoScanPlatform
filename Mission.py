@@ -128,7 +128,7 @@ class Mission(threading.Thread):
         self.MoveNumber = self.MovePoints.__len__()
         self.OnePointTime = 0
         date_now = localtime(time())
-        self.MissionTime = "{:0>2d}_{:0>2d}_{:0>2d}_{:0>2d}".format(date_now.tm_mon, date_now.tm_mday, date_now.tm_hour, date_now.tm_min / 20)
+        self.MissionTime = "{:0>2d}{:0>2d}{:0>2d}{:0>2d}".format(date_now.tm_mon, date_now.tm_mday, date_now.tm_hour, int(date_now.tm_min / 10))
     
     '''
         @description: 读取配置
