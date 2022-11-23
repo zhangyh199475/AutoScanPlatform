@@ -122,6 +122,10 @@ function get_state(){
             document.getElementById("total_time").innerHTML = '[预计时间]:' + total_time_h.toString() + ':' + total_time_m.toString() + ':' + total_time_s.toString(); 
             document.getElementById("left_time").innerHTML = '[剩余时间]:' + left_time_h.toString() + ':' + left_time_m.toString() + ':' + left_time_s.toString(); 
         }
+
+        // 设定路径信息
+        var full_path = JSON.parse(data)['full_path'];
+        document.getElementById("full_path").innerHTML = '[文件路径]:' + full_path; 
     })
 }
 

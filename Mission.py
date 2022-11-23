@@ -8,7 +8,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from time import sleep, time
+from time import sleep, time, localtime
 
 class Mission(threading.Thread): 
     def __init__(self):
@@ -25,6 +25,7 @@ class Mission(threading.Thread):
         self.MoveNumber = 0 # 需要移动到的点个数
         self.OnePointTime = 0 # 一个点测量的时间
         self.CostTime = 0 # 已经花掉的时间
+        self.MissionTime = 0 # 任务创建的时间
 
         # 任务设置相关变量
         self.mission_conf = [
@@ -46,7 +47,7 @@ class Mission(threading.Thread):
         self.f_step = 0 # 扫描频率步长
         self.f_times = 1 # 扫描一点重复次数
         self.save_folder = './'
-        self.save_file = 'tmp.csv'
+        self.save_file = 'tmp'
         try: 
             self.load_conf()
             for i in range(5): 
@@ -126,6 +127,8 @@ class Mission(threading.Thread):
         self.get_move_points()
         self.MoveNumber = self.MovePoints.__len__()
         self.OnePointTime = 0
+        date_now = localtime(time())
+        self.MissionTime = "{:0>2d}_{:0>2d}_{:0>2d}_{:0>2d}".format(date_now.tm_mon, date_now.tm_mday, date_now.tm_hour, date_now.tm_min / 20)
     
     '''
         @description: 读取配置
@@ -201,6 +204,7 @@ class Mission(threading.Thread):
         LeftTimeH = int(LeftTime / 60 / 60)
         LeftTimeM = int((LeftTime - LeftTimeH * 60 * 60) / 60)
         LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60)
+        full_path = "{}/{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.MissionTime)
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
@@ -211,7 +215,8 @@ class Mission(threading.Thread):
             'TotalTimeS': TotalTimeS, 
             'LeftTimeH': LeftTimeH, 
             'LeftTimeM': LeftTimeM, 
-            'LeftTimeS': LeftTimeS
+            'LeftTimeS': LeftTimeS, 
+            'full_path': full_path
         }
         return json.dumps(state)
 
@@ -306,7 +311,8 @@ class Mission(threading.Thread):
                         # 重排列名
                         DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
                         self.Data = self.Data[DataColumns].reset_index(drop=True)
-                        self.Data.to_csv(self.save_folder + "/" + self.save_file)
+                        self.Data.to_csv("{}/{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.MissionTime))
+                        # self.Data.to_csv(self.save_folder + "/" + self.save_file + '.csv')
                     self.MissionState = "finished"
                 else: 
                     if (self.MoveNum == 1): 
@@ -366,7 +372,8 @@ class Mission(threading.Thread):
                                 DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
                                 tmp_Data = self.Data.copy()
                                 tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
-                                tmp_Data.to_csv(self.save_folder + "/" + self.save_file)
+                                tmp_Data.to_csv("{}/{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.MissionTime))
+                                # tmp_Data.to_csv(self.save_folder + "/" + self.save_file + '.csv')
                     if (self.MoveNum == 1): 
                         self.OnePointTime = time() - start_time
                     self.MoveNum += 1
@@ -377,7 +384,5 @@ class Mission(threading.Thread):
 
 if __name__ == "__main__": 
     BRTMission = Mission()
-    BRTRobot.setJointCoordinate([0, -30, -30, 0, 60, 0])
-    BRTRobot.waitMoving()
     sleep(1)
     pass
