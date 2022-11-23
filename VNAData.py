@@ -14,19 +14,23 @@ import time
 '''
     @description: 获取VNA在某个点的数据
     @param {
-        int f_min: 频率的最小值
-        int f_max: 频率的最大值
-        int f_numpoints: 频率的步幅
+        int f_min: 频率的最小值，单位GHz
+        int f_max: 频率的最大值，单位GHz
+        int f_step: 频率的步幅，单位GHz
     }
     @return {
         float [[f, real, imaginary], ...] 获取到的数据，分为频率，实部，虚部
     }
 '''
-def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100, S_mode = 'S21'): 
+def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S21'): 
     try:
-        f_min = int(f_min)
-        f_max = int(f_max)
-        f_numpoints = int(f_numpoints)
+        f_min = int(f_min * 10**9)
+        f_max = int(f_max * 10**9)
+        f_step = int(f_step * 10**9)
+        f_numpoints = 0
+        while(f_min + f_step * (f_numpoints + 1) <= f_max) :
+            f_numpoints += 1 
+        f_max_real = f_min + f_step * f_numpoints
 
         # Open a VISA resource manager pointing to the installation folder for the Keysight Visa libraries.
         rm = pyvisa.ResourceManager('C:\\Program Files (x86)\\IVI Foundation\\VISA\\WinNT\\agvisa\\agbin\\visa32.dll')
@@ -80,7 +84,7 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100, S_m
         myPna.write("SENSe:SWEep:TYPE LIN")
 
         FREQ_START = f_min
-        FREQ_STOP  = f_max
+        FREQ_STOP  = f_max_real
 
         myPna.write("SENSe:FREQ:STARt " + str(FREQ_START))
 
@@ -89,7 +93,7 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100, S_m
         myTraceData = []
 
         # Set number of points by list value
-        numPoints = f_numpoints
+        numPoints = f_numpoints + 1
         # numPoints = int((FREQ_STOP - FREQ_START) / f_step)
         myPna.write("SENS:SWE:POIN " + str(numPoints) + ";*OPC?")
         myPna.read()
@@ -104,7 +108,7 @@ def get_vnadata(f_min = 10000000000, f_max = 18000000000, f_numpoints = 100, S_m
 
 
         DataList = myTraceData.split(',')
-        FREQ_STEP = (FREQ_STOP - FREQ_START)/(numPoints - 1)
+        FREQ_STEP = f_step
         Data_res = []
         for index in range(numPoints):
             data_tmp = [str(FREQ_START+FREQ_STEP*index), DataList[2*index], DataList[2*index+1]]
