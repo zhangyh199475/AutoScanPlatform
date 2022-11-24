@@ -7,7 +7,7 @@ $(function()
             'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
             'mode', 
             'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
-            'save_folder', 'save_file'
+            'save_folder', 'save_file', 'to_mailaddr'
         ];
         for (var i = 0, len = confs.length; i < len; i++) {
             document.getElementById(confs[i]).value = conf_json[confs[i]];
@@ -38,10 +38,9 @@ function mode_select(){
 
 // 选择是预检模式还是扫描模式
 function move_mode(move){
-    var post_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 'save_folder', 'save_file']
+    var post_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 'save_folder', 'save_file', 'to_mailaddr']
     var post_json = {}
     for (var i = 0, len = post_name.length; i < len; i++) {
-        var tmp_value = document.getElementById(post_name[i]).value; 
         post_json[post_name[i]] = document.getElementById(post_name[i]).value;
     }
     if (move == 'check') {

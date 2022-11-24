@@ -13,13 +13,22 @@
 	<h1>自动扫场系统</h1>
 	<h2>任务设置</h2>
     <button type="button" onclick="back()">返回初始化</button>
-    <button type="button" onclick="reset_center()">回到中心点</button>
+    <button type="button" onclick="reset_center()">回到原点</button>
     <p>
+        扫描平面
         <select id='mode' onclick="mode_select()">
             <option value = "xOy">xOy</option>
             <option value = "xOz">xOz</option>
             <option value = "yOz">yOz</option>
         </select>
+        S参数模式选择
+        <select id='S_mode'>
+            <option value = "S11">S11</option>
+            <option value = "S12">S12</option>
+            <option value = "S21">S21</option>
+            <option value = "S22">S22</option>
+        </select>
+        重复采集次数:<input type="text" id='f_times' value="30" style="width:60px;">
     </p>
     <p>
         <span id='a'>坐标X: </span>
@@ -40,14 +49,6 @@
         最小值(GHz):<input type="text" id='f_min' value="0" style="width:60px;">
         最大值(GHz):<input type="text" id='f_max' value="200" style="width:60px;">
         步长(GHz):<input type="text" id='f_step' value="30" style="width:60px;">
-        重复采集次数:<input type="text" id='f_times' value="30" style="width:60px;">
-        S参数模式选择
-        <select id='S_mode'>
-            <option value = "S11">S11</option>
-            <option value = "S12">S12</option>
-            <option value = "S21">S21</option>
-            <option value = "S22">S22</option>
-        </select>
     </p>
     <p>
         <p>
@@ -73,7 +74,8 @@
     <p>
         <span>保存文件夹:</span><input type="text" id="save_folder" value="./", disabled></br>
         <span>保存文件名:</span><input type="text" id="save_file" value="tmp.csv"></br>
-        <span id = "full_path">[文件路径]:未知</span>
+        <span id = "full_path">[文件路径]:未知</span><br>
+        <span>发送邮件地址:</span><input type="text" id="to_mailaddr" value=""></br>
     </p>
 </body>
 </html>

@@ -8,6 +8,7 @@ import json
 import numpy as np
 import pandas as pd
 
+from DataMail import DataMail
 from time import sleep, time, localtime
 
 class Mission(threading.Thread): 
@@ -28,12 +29,6 @@ class Mission(threading.Thread):
         self.MissionTime = 0 # 任务创建的时间
 
         # 任务设置相关变量
-        self.mission_conf = [
-            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', # 移动距离相关变量
-            'mode', # 模式变量
-            'f_min', 'f_max', 'f_step', 'f_times', # vna数据读取相关变量
-            'save_folder', 'save_file' # 保存文件相关变量
-        ]
         self.a_min = 0
         self.a_max = 0
         self.b_min = 0
@@ -48,6 +43,7 @@ class Mission(threading.Thread):
         self.f_times = 1 # 扫描一点重复次数
         self.save_folder = './'
         self.save_file = 'tmp'
+        self.to_mailaddr = ''
         try: 
             self.load_conf()
             for i in range(5): 
@@ -75,6 +71,8 @@ class Mission(threading.Thread):
         if not (ret1 and ret2): 
             self.MissionState = "error"
             print('[ARM Connection Wrong]: Check your connection')
+        else: 
+            print('[Get Coordinate Successfully]')
 
     
     '''
@@ -143,7 +141,7 @@ class Mission(threading.Thread):
             'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
             'mode', 
             'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
-            'save_folder', 'save_file'
+            'save_folder', 'save_file', 'to_mailaddr'
         ]
         for i in conf_name: 
             exec('self.{} = conf[\'{}\']'.format(i, i))
@@ -160,7 +158,7 @@ class Mission(threading.Thread):
             'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
             'mode', 
             'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
-            'save_folder', 'save_file'
+            'save_folder', 'save_file', 'to_mailaddr'
         ]
         for i in conf_name: 
             exec('conf[\'{}\'] = self.{}'.format(i, i))
@@ -183,7 +181,7 @@ class Mission(threading.Thread):
             'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
             'mode', 
             'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
-            'save_folder', 'save_file'
+            'save_folder', 'save_file', 'to_mailaddr'
         ]
         for i in conf_name: 
             exec('conf[\'{}\'] = self.{}'.format(i, i))
@@ -204,7 +202,7 @@ class Mission(threading.Thread):
         LeftTimeH = int(LeftTime / 60 / 60)
         LeftTimeM = int((LeftTime - LeftTimeH * 60 * 60) / 60)
         LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60)
-        full_path = "{}/{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.MissionTime)
+        full_path = "{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime)
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
@@ -308,11 +306,21 @@ class Mission(threading.Thread):
                     # 扫描模式保存数据
                     if (not self.CheckFlag): 
                         self.MissionState = "saving"
+                        print("[Saving data file]")
                         # 重排列名
-                        DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
+                        DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
                         self.Data = self.Data[DataColumns].reset_index(drop=True)
-                        self.Data.to_csv("{}/{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.MissionTime))
-                        # self.Data.to_csv(self.save_folder + "/" + self.save_file + '.csv')
+                        self.Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime))
+                        # 可以发送邮件则发送邮件
+                        if (self.to_mailaddr != ''): 
+                            data_mail = DataMail(to_addr=self.to_mailaddr, 
+                                mail_title='Scan Finished Successfully', 
+                                mail_text="Scan Configuration: \r\n    Mode:{mode}\r\n    S parameter:{S_mode}\r\n    Range(mm):{a_length} x {b_length}\r\n    Frequency(GHz): {f_min} ~ {f_max}".\
+                                    format(mode=self.mode, S_mode=self.S_mode, a_length=(self.a_max - self.a_min), b_length=(self.b_max - self.b_min), f_min=self.f_min, f_max = self.f_max), 
+                                data_path="{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime)
+                            )
+                            data_mail.setDaemon(True)
+                            data_mail.start()
                     self.MissionState = "finished"
                 else: 
                     if (self.MoveNum == 1): 
@@ -339,6 +347,14 @@ class Mission(threading.Thread):
                             print('[ARM Connection Wrong]: Check your connection')
                             self.MissionState = "error"
                     if (self.MissionState == "error") : 
+                        if (self.to_mailaddr != ''): 
+                            data_mail = DataMail(to_addr=self.to_mailaddr, 
+                                mail_title='!!!Auto Scan Wrong!!!', 
+                                mail_text='There is a wrong happened in Scan system', 
+                                data_path=""
+                            )
+                            data_mail.setDaemon(True)
+                            data_mail.start()
                         continue
 
                     # 扫描模式获取数据
@@ -349,7 +365,7 @@ class Mission(threading.Thread):
                                 res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step, self.S_mode)
                                 if (res): 
                                     break
-                            PointVNADataName = ['Hz', 'R', 'I']
+                            PointVNADataName = ['Freq', 'E_r', 'E_i']
                             if (i == 0): 
                                 PdALLData = pd.DataFrame(data=PointVNAData, columns=PointVNADataName)
                             else: 
@@ -369,11 +385,10 @@ class Mission(threading.Thread):
                         if (self.MoveNum % 20 == 0): 
                             if (not self.CheckFlag): 
                                 # 重排列名
-                                DataColumns = ['x', 'y', 'z', 'Hz', 'R', 'I']
+                                DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
                                 tmp_Data = self.Data.copy()
                                 tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
-                                tmp_Data.to_csv("{}/{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.MissionTime))
-                                # tmp_Data.to_csv(self.save_folder + "/" + self.save_file + '.csv')
+                                tmp_Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime))
                     if (self.MoveNum == 1): 
                         self.OnePointTime = time() - start_time
                     self.MoveNum += 1

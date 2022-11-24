@@ -95,6 +95,7 @@ def move_mode(move_mode):
         BRTMission.S_mode = request.form.get('S_mode')
         BRTMission.save_folder = request.form.get('save_folder')
         BRTMission.save_file = request.form.get('save_file')
+        BRTMission.to_mailaddr = request.form.get('to_mailaddr')
         BRTMission.save_conf()
         return "DONE"
 

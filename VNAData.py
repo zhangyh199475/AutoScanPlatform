@@ -22,11 +22,11 @@ import time
         float [[f, real, imaginary], ...] 获取到的数据，分为频率，实部，虚部
     }
 '''
-def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S21'): 
+def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'): 
     try:
-        f_min = int(f_min * 10**9)
-        f_max = int(f_max * 10**9)
-        f_step = int(f_step * 10**9)
+        f_min = int(float(f_min) * 10**9)
+        f_max = int(float(f_max) * 10**9)
+        f_step = int(float(f_step) * 10**9)
         f_numpoints = 0
         while(f_min + f_step * (f_numpoints + 1) <= f_max) :
             f_numpoints += 1 
@@ -131,5 +131,6 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S21'):
     pass
 
 if __name__ == "__main__": 
-    data = get_vnadata()
-    print(data)
+    res, data = get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11')
+    for i in data:
+        print(i)

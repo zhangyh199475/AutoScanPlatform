@@ -14,8 +14,12 @@ function reset_center(){
     $.post('/reset_center')
 }
 
-// 完成初始化并跳转到上一页
+// 完成初始化并跳转到下一页
 function initialize(){
     $.post('/save_conf')
+    window.location.href="/mission"
+}
+// 不完成初始化直接跳转到下一页
+function to_mission(){
     window.location.href="/mission"
 }
