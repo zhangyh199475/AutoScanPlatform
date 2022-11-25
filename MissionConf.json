@@ -25,7 +25,7 @@
     "f_min": "22.0",
     "f_max": "30.0",
     "f_step": "0.5",
-    "f_times": "1",
+    "f_times": "6",
     "S_mode": "S21",
     "save_folder": "D:/workspace/ArmScan/Data",
     "save_file": "1m_\u65b9\u53e328G\u5587\u53ed_\u7a7a\u6c14_\u6ce2\u5bfc\u63a2\u9488",

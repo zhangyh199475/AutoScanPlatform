@@ -126,7 +126,7 @@ class Mission(threading.Thread):
         self.MoveNumber = self.MovePoints.__len__()
         self.OnePointTime = 0
         date_now = localtime(time())
-        self.MissionTime = "{:0>2d}{:0>2d}{:0>2d}{:0>2d}".format(date_now.tm_mon, date_now.tm_mday, date_now.tm_hour, int(date_now.tm_min / 10))
+        self.MissionTime = "{:0>2d}{:0>2d}{:0>2d}{:0>2d}".format(date_now.tm_mon, date_now.tm_mday, date_now.tm_hour, int(date_now.tm_min / 10) * 10)
     
     '''
         @description: 读取配置
@@ -202,7 +202,7 @@ class Mission(threading.Thread):
         LeftTimeH = int(LeftTime / 60 / 60)
         LeftTimeM = int((LeftTime - LeftTimeH * 60 * 60) / 60)
         LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60)
-        full_path = "{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime)
+        full_path = "{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
@@ -310,14 +310,14 @@ class Mission(threading.Thread):
                         # 重排列名
                         DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
                         self.Data = self.Data[DataColumns].reset_index(drop=True)
-                        self.Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime))
+                        self.Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
                         # 可以发送邮件则发送邮件
                         if (self.to_mailaddr != ''): 
                             data_mail = DataMail(to_addr=self.to_mailaddr, 
                                 mail_title='Scan Finished Successfully', 
                                 mail_text="Scan Configuration: \r\n    Mode:{mode}\r\n    S parameter:{S_mode}\r\n    Range(mm):{a_length} x {b_length}\r\n    Frequency(GHz): {f_min} ~ {f_max}".\
                                     format(mode=self.mode, S_mode=self.S_mode, a_length=(self.a_max - self.a_min), b_length=(self.b_max - self.b_min), f_min=self.f_min, f_max = self.f_max), 
-                                data_path="{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime)
+                                data_path="{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
                             )
                             data_mail.setDaemon(True)
                             data_mail.start()
@@ -388,7 +388,7 @@ class Mission(threading.Thread):
                                 DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
                                 tmp_Data = self.Data.copy()
                                 tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
-                                tmp_Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.save_file, self.mode, self.S_mode, self.MissionTime))
+                                tmp_Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
                     if (self.MoveNum == 1): 
                         self.OnePointTime = time() - start_time
                     self.MoveNum += 1
