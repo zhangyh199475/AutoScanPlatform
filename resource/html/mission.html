@@ -69,11 +69,14 @@
         <p>
             <button type="button" id="start_button" onclick="move()">启动</button>
         </p>
-        
+        <p>
+            <button type="button" id="S_parameter_button" onclick="get_S_parameter()">仅获取S参数</button>
+        </p>
     </p>
     <p>
         <span>保存文件夹:</span><input type="text" id="save_folder" value="./", disabled></br>
         <span>保存文件名:</span><input type="text" id="save_file" value="tmp.csv"></br>
+        <span>保存S参数文件名:</span><input type="text" id="save_file_S_parameter" value="S_tmp.csv"></br>
         <span id = "full_path">[文件路径]:未知</span><br>
         <span>发送邮件地址:</span><input type="text" id="to_mailaddr" value=""></br>
     </p>

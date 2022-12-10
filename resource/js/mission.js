@@ -12,6 +12,7 @@ $(function()
         for (var i = 0, len = confs.length; i < len; i++) {
             document.getElementById(confs[i]).value = conf_json[confs[i]];
         }
+        document.getElementById("save_file_S_parameter").value = "S_"+conf_json["save_file"];
     });
 });
 
@@ -58,6 +59,16 @@ function back(){ window.location.href="/"; }
 
 // 启动
 function move(){ $.post('/run'); }
+
+// 获取S参数并保存
+function get_S_parameter(){ 
+    var post_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode', 'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 'save_folder', 'save_file', 'to_mailaddr']
+    var post_json = {}
+    for (var i = 0, len = post_name.length; i < len; i++) {
+        post_json[post_name[i]] = document.getElementById(post_name[i]).value;
+    }
+    $.post('/get_S_parameter', post_json); 
+}
 
 // 回到设定的中心点
 function reset_center(){

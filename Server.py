@@ -114,6 +114,30 @@ def run():
         return "DONE"
 
 '''
+    @description: 获取S参数api
+    @param {}
+    @return {}
+'''
+@app.route('/get_S_parameter', methods=['POST'])
+def move_init(): 
+    if request.method == 'POST':
+        paras = []
+        paras_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step']
+        for i in paras_name: 
+            paras.append(request.form.get(i))
+        BRTMission.scan_mode(float(paras[0]), float(paras[1]), float(paras[2]), float(paras[3]), float(paras[4]), float(paras[5]), paras[6], CheckFlag=check_flag)
+        BRTMission.f_min = request.form.get('f_min')
+        BRTMission.f_max = request.form.get('f_max')
+        BRTMission.f_step = request.form.get('f_step')
+        BRTMission.f_times = request.form.get('f_times')
+        BRTMission.S_mode = request.form.get('S_mode')
+        BRTMission.save_folder = request.form.get('save_folder')
+        BRTMission.save_file = request.form.get('save_file')
+        BRTMission.to_mailaddr = request.form.get('to_mailaddr')
+        BRTMission.save_conf()
+        return "DONE"
+
+'''
     @description: 移动状态api
     @param {}
     @return {}
@@ -142,12 +166,7 @@ def range():
 @app.route('/mission', methods=['GET', "POST"])
 def MissionPage():
     if request.method == 'GET': 
-        MissionPage_file = open('mission.html', 'r', encoding='utf-8')
-        MissionPage_context = ''
-        for i in MissionPage_file: 
-            MissionPage_context += i
-        MissionPage_file.close
-        return MissionPage_context
+        return app.send_static_file('html/mission.html')
     elif request.method == 'POST': 
         pass
     pass 
@@ -160,12 +179,7 @@ def MissionPage():
 @app.route('/', methods = ['GET', 'POST'])
 def InitPage():
     if request.method == 'GET': 
-        InitPage_file = open('index.html', 'r', encoding='utf-8')
-        InitPage_context = ''
-        for i in InitPage_file: 
-            InitPage_context += i
-        InitPage_file.close()
-        return InitPage_context
+        return app.send_static_file('html/index.html')
     elif request.method == 'POST': 
         pass
 
