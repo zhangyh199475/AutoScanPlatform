@@ -1,3 +1,11 @@
+/*
+ * @Author: zsh zsh1282984748@163.com
+ * @Date: 2022-11-22 09:05:58
+ * @LastEditors: zsh zsh1282984748@163.com
+ * @LastEditTime: 2022-12-11 11:12:04
+ * @FilePath: \ArmScan\resource\js\index.js
+ * @Description: 首页js脚本
+ */
 // 移动末端位置
 function move(axis, direct){
     var step = document.getElementById(axis+"_select").value

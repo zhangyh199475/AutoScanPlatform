@@ -8,8 +8,12 @@ import json
 import numpy as np
 import pandas as pd
 
+import SystemLogger
+
 from DataMail import DataMail
 from time import sleep, time, localtime
+
+MissionLogger = SystemLogger.logger_init("MissionLogger", "./Log/system.log") # 日志管理器
 
 class Mission(threading.Thread): 
     def __init__(self):
@@ -53,9 +57,9 @@ class Mission(threading.Thread):
                     break
                 elif (i == 4): 
                     self.MissionState = "error"
-                    print('[ARM Connection Wrong]: Check your connection')
+                    MissionLogger.error('ARM Connection Wrong: Check your connection')
                 else: 
-                    print('[ARM Connection Wrong]: Retrying')
+                    MissionLogger.error('ARM Connection Wrong: Retrying')
         except: 
             pass
         pass
@@ -70,9 +74,9 @@ class Mission(threading.Thread):
         ret2, self.OriginJoint = BRTRobot.getJointCoordinate()
         if not (ret1 and ret2): 
             self.MissionState = "error"
-            print('[ARM Connection Wrong]: Check your connection')
+            MissionLogger.error('ARM Connection Wrong: Check your connection')
         else: 
-            print('[Get Coordinate Successfully]')
+            MissionLogger.info('Get Coordinate Successfully')
 
     
     '''
@@ -103,7 +107,7 @@ class Mission(threading.Thread):
                     point[Mode_AIndex[self.mode]] = point[Mode_AIndex[self.mode]] + self.a_min + self.a_step * i
                     point[Mode_BIndex[self.mode]] = point[Mode_BIndex[self.mode]] + self.b_min + self.b_step * j
                     self.MovePoints.append(point)
-        print("[Move Points Setted]")
+        MissionLogger.info("Move Points Setted")
     
     '''
         @description: 检查或扫描
@@ -165,9 +169,9 @@ class Mission(threading.Thread):
         try: 
             conf_file = open('./MissionConf.json', 'w')
             json.dump(conf, conf_file, indent=4)
-            print("[Save Configure Success]")
+            MissionLogger.info("Save Configure Success")
         except: 
-            print("[Save Configure Failed]")
+            MissionLogger.info("Save Configure Failed")
 
     '''
         @description: 获取配置
@@ -203,6 +207,7 @@ class Mission(threading.Thread):
         LeftTimeM = int((LeftTime - LeftTimeH * 60 * 60) / 60)
         LeftTimeS = int(LeftTime - LeftTimeH * 60 * 60 - LeftTimeM * 60)
         full_path = "{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
+        S_full_path = "{}/{}_{}_{}_{}_S.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
         state = {
             'state': self.MissionState, 
             'MoveNum': self.MoveNum, 
@@ -214,7 +219,8 @@ class Mission(threading.Thread):
             'LeftTimeH': LeftTimeH, 
             'LeftTimeM': LeftTimeM, 
             'LeftTimeS': LeftTimeS, 
-            'full_path': full_path
+            'full_path': full_path, 
+            'S_full_path': S_full_path
         }
         return json.dumps(state)
 
@@ -291,115 +297,150 @@ class Mission(threading.Thread):
         return json.dumps(available_range)
         pass
 
-
-    def get_S(self): 
-        
+    '''
+        @description: 获取S参数并保存
+        @param {}
+        @return {}
+    '''
+    def get_S_parameter(self): 
+        # 根据采集次数获取数据
+        for i in range(int(self.f_times)): 
+            MissionLogger.info("Getting VNA Data: {}, {}, {}".format(self.f_min, self.f_max, self.f_step))
+            # 5次内尝试获取数据，全部失败获得全部NULL
+            for _ in range(5): 
+                res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step, self.S_mode)
+                if (res): 
+                    break
+            # 拼接数据
+            PointVNADataName = ['Freq', 'E_r', 'E_i']
+            if (i == 0): 
+                PdALLData = pd.DataFrame(data=PointVNAData, columns=PointVNADataName)
+            else: 
+                PdALLData = PdALLData.append(pd.DataFrame(data=PointVNAData, columns=PointVNADataName))
+        # 保存数据
+        PdALLData = PdALLData.reset_index(drop=True)
+        PdALLData.to_csv("{}/{}_{}_{}_{}_S参数.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
+        # 发送邮件
+        if (self.to_mailaddr != ''): 
+            data_mail = DataMail(to_addr=self.to_mailaddr, 
+                mail_title='S Parameter Get Successfully', 
+                mail_text="Configuration: \r\n    S parameter:{S_mode}\r\n    Frequency(GHz): {f_min} ~ {f_max}".\
+                    format(S_mode=self.S_mode, f_min=self.f_min, f_max = self.f_max), 
+                data_path="{}/{}_{}_{}_{}_S参数.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
+            )
+            data_mail.setDaemon(True)
+            data_mail.start()
         pass
 
+    '''
+        @description: 运行线程
+        @param {}
+        @return {}
+    '''
     def run(self): 
         while(1): 
-            # if (self.MoveFlag): 
-            if (self.MissionState == 'running'): 
-                # 所有点移动完毕
-                if(self.MoveNum >= self.MovePoints.__len__()) : 
-                    # 回到初始位置
-                    self.MoveNum = 0
-                    BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
-                    BRTRobot.waitMoving()
-                    print("[Move Finished]")
-                    # self.MoveFlag = False
-                    # 扫描模式保存数据
-                    if (not self.CheckFlag): 
-                        self.MissionState = "saving"
-                        print("[Saving data file]")
-                        # 重排列名
-                        DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
-                        self.Data = self.Data[DataColumns].reset_index(drop=True)
-                        self.Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
-                        # 可以发送邮件则发送邮件
-                        if (self.to_mailaddr != ''): 
-                            data_mail = DataMail(to_addr=self.to_mailaddr, 
-                                mail_title='Scan Finished Successfully', 
-                                mail_text="Scan Configuration: \r\n    Mode:{mode}\r\n    S parameter:{S_mode}\r\n    Range(mm):{a_length} x {b_length}\r\n    Frequency(GHz): {f_min} ~ {f_max}".\
-                                    format(mode=self.mode, S_mode=self.S_mode, a_length=(self.a_max - self.a_min), b_length=(self.b_max - self.b_min), f_min=self.f_min, f_max = self.f_max), 
-                                data_path="{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
-                            )
-                            data_mail.setDaemon(True)
-                            data_mail.start()
-                    self.MissionState = "finished"
-                else: 
-                    if (self.MoveNum == 1): 
-                        start_time = time()
-                    # 模式选择速度，预检比较快
-                    if (self.CheckFlag): 
-                        speed = 100
-                    else: 
-                        speed = 60
-                    
-                    # 移动进入下一个点
-                    self.MissionState = "running"
-                    for i in range(5): 
-                        if self.MoveNum == 0: 
-                            res1 = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
-                            res2 = BRTRobot.waitMoving()
-                        res3 = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
-                        res4 = BRTRobot.waitMoving()
-                        if (res1 and res2 and res3 and res4) : 
-                            break
-                        elif (i < 4) :
-                            print('[ARM Connection Wrong]: Retrying')
-                        else : 
-                            print('[ARM Connection Wrong]: Check your connection')
-                            self.MissionState = "error"
-                    if (self.MissionState == "error") : 
-                        if (self.to_mailaddr != ''): 
-                            data_mail = DataMail(to_addr=self.to_mailaddr, 
-                                mail_title='!!!Auto Scan Wrong!!!', 
-                                mail_text='There is a wrong happened in Scan system', 
-                                data_path=""
-                            )
-                            data_mail.setDaemon(True)
-                            data_mail.start()
-                        continue
-
-                    # 扫描模式获取数据
-                    if (not self.CheckFlag): 
-                        for i in range(int(self.f_times)): 
-                            print("[Getting VNA Data]: ", self.f_min, self.f_max, self.f_step)
-                            for _ in range(5): 
-                                res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step, self.S_mode)
-                                if (res): 
-                                    break
-                            PointVNADataName = ['Freq', 'E_r', 'E_i']
-                            if (i == 0): 
-                                PdALLData = pd.DataFrame(data=PointVNAData, columns=PointVNADataName)
-                            else: 
-                                print(i)
-                                PdALLData = PdALLData.append(pd.DataFrame(data=PointVNAData, columns=PointVNADataName))
-                        # 添加坐标列
-                        PdALLData['x'] = self.MovePoints[self.MoveNum][0]
-                        PdALLData['y'] = self.MovePoints[self.MoveNum][1]
-                        PdALLData['z'] = self.MovePoints[self.MoveNum][2]
-                        # print(PdALLData)
-                        if (self.MoveNum == 0): 
-                            self.Data = PdALLData
-                        else: 
-                            self.Data = self.Data.append(PdALLData)
-                        print(self.Data.shape)
+            try : 
+                # 状态为运动
+                if (self.MissionState == 'running'): 
+                    # 所有点移动完毕
+                    if(self.MoveNum >= self.MovePoints.__len__()) : 
+                        # 回到初始位置
+                        self.MoveNum = 0
+                        BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                        BRTRobot.waitMoving()
+                        MissionLogger.info("Move Finished")
+                        # self.MoveFlag = False
                         # 扫描模式保存数据
-                        if (self.MoveNum % 20 == 0): 
-                            if (not self.CheckFlag): 
-                                # 重排列名
-                                DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
-                                tmp_Data = self.Data.copy()
-                                tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
-                                tmp_Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
-                    if (self.MoveNum == 1): 
-                        self.OnePointTime = time() - start_time
-                    self.MoveNum += 1
-            else: 
-                sleep(1)
+                        if (not self.CheckFlag): 
+                            self.MissionState = "saving"
+                            MissionLogger.info("Saving data file")
+                            # 重排列名
+                            DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
+                            self.Data = self.Data[DataColumns].reset_index(drop=True)
+                            self.Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
+                            # 可以发送邮件则发送邮件
+                            if (self.to_mailaddr != ''): 
+                                data_mail = DataMail(to_addr=self.to_mailaddr, 
+                                    mail_title='Scan Finished Successfully', 
+                                    mail_text="Scan Configuration: \r\n    Mode:{mode}\r\n    S parameter:{S_mode}\r\n    Range(mm):{a_length} x {b_length}\r\n    Frequency(GHz): {f_min} ~ {f_max}".\
+                                        format(mode=self.mode, S_mode=self.S_mode, a_length=(self.a_max - self.a_min), b_length=(self.b_max - self.b_min), f_min=self.f_min, f_max = self.f_max), 
+                                    data_path="{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode)
+                                )
+                                data_mail.setDaemon(True)
+                                data_mail.start()
+                        self.MissionState = "finished"
+                    else: 
+                        if (self.MoveNum == 1): 
+                            start_time = time()
+                        # 模式选择速度，预检比较快
+                        if (self.CheckFlag): 
+                            speed = 100
+                        else: 
+                            speed = 60
+                        
+                        # 移动进入下一个点
+                        self.MissionState = "running"
+                        for i in range(5): 
+                            # 没有进入下一个点前先复位
+                            if self.MoveNum == 0: 
+                                res1 = BRTRobot.setWorldCoordinate(np.array(self.OriginWorld))
+                                res2 = BRTRobot.waitMoving()
+                            res3 = BRTRobot.setWorldCoordinate(np.array(self.MovePoints[self.MoveNum]) + np.array(self.OriginWorld), speed)
+                            res4 = BRTRobot.waitMoving()
+                            if (res1 and res2 and res3 and res4) : 
+                                break
+                            elif (i < 4) :
+                                MissionLogger.error('ARM Connection Wrong: Retrying')
+                            else : 
+                                MissionLogger.error('ARM Connection Wrong: Check your connection')
+                                self.MissionState = "error"
+                        if (self.MissionState == "error") : 
+                            if (self.to_mailaddr != ''): 
+                                data_mail = DataMail(to_addr=self.to_mailaddr, 
+                                    mail_title='!!!Auto Scan Wrong!!!', 
+                                    mail_text='There is a wrong happened in Scan system', 
+                                    data_path=""
+                                )
+                                data_mail.setDaemon(True)
+                                data_mail.start()
+                            continue
 
+                        # 扫描模式获取数据
+                        if (not self.CheckFlag): 
+                            for i in range(int(self.f_times)): 
+                                MissionLogger.info("Getting VNA Data: {}, {}, {}".format(self.f_min, self.f_max, self.f_step))
+                                for _ in range(5): 
+                                    res, PointVNAData = VNAData.get_vnadata(self.f_min, self.f_max, self.f_step, self.S_mode)
+                                    if (res): 
+                                        break
+                                PointVNADataName = ['Freq', 'E_r', 'E_i']
+                                if (i == 0): 
+                                    PdALLData = pd.DataFrame(data=PointVNAData, columns=PointVNADataName)
+                                else: 
+                                    PdALLData = PdALLData.append(pd.DataFrame(data=PointVNAData, columns=PointVNADataName))
+                            # 添加坐标列
+                            PdALLData['x'] = self.MovePoints[self.MoveNum][0]
+                            PdALLData['y'] = self.MovePoints[self.MoveNum][1]
+                            PdALLData['z'] = self.MovePoints[self.MoveNum][2]
+                            if (self.MoveNum == 0): 
+                                self.Data = PdALLData
+                            else: 
+                                self.Data = self.Data.append(PdALLData)
+                            # 扫描模式保存数据
+                            if (self.MoveNum % 20 == 0): 
+                                if (not self.CheckFlag): 
+                                    # 重排列名
+                                    DataColumns = ['x', 'y', 'z', 'Freq', 'E_r', 'E_i']
+                                    tmp_Data = self.Data.copy()
+                                    tmp_Data = tmp_Data[DataColumns].reset_index(drop=True)
+                                    tmp_Data.to_csv("{}/{}_{}_{}_{}.csv".format(self.save_folder, self.MissionTime, self.save_file, self.mode, self.S_mode))
+                        if (self.MoveNum == 1): 
+                            self.OnePointTime = time() - start_time
+                        self.MoveNum += 1
+                else: 
+                    sleep(1)
+            except Exception as err:
+                MissionLogger.error("UNKOWN ERROR HAPPENED")
 
 
 if __name__ == "__main__": 

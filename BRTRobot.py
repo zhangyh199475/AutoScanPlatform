@@ -3,6 +3,8 @@ import socket
 import json
 import numpy as np
 
+import SystemLogger
+
 from Arm import Arm
 from time import sleep
 from math import sqrt
@@ -14,7 +16,7 @@ BRT_speed = 60 # 机器人默认移动速度
 MovingCheckGap = 0.01 # 检查机器人移动状态间隔
 socket.setdefaulttimeout(3) # 连接检测默认最长时间
 BRTArm = Arm(Calibrate = True)
-
+BRTLogger = SystemLogger.logger_init("BRTLogger", "./Log/system.log") # 日志管理器
 
 '''
     @description: 获取伯朗特机器人的世界坐标系
@@ -37,7 +39,7 @@ def getWorldCoordinate():
         BRT_connector.send(json.dumps(getWorldCoordinate_json).encode("ascii"))
         WorldCoordinate_msg = BRT_connector.recv(1024) .decode('ascii')
         WorldCoordinate = json.loads(WorldCoordinate_msg)["queryData"]
-        print("[World Coordinate]:", WorldCoordinate)
+        BRTLogger.info("World Coordinate: {}".format(WorldCoordinate))
         BRT_connector.close()
         return [True, list(np.array(WorldCoordinate).astype(np.float64))]
     except: 
@@ -64,7 +66,7 @@ def getJointCoordinate():
         BRT_connector.send(json.dumps(getJointCoordinate_json).encode("ascii"))
         JointCoordinate_msg = BRT_connector.recv(1024) .decode('ascii')
         JointCoordinate = json.loads(JointCoordinate_msg)["queryData"]
-        print("[Joint Coordinate]:", JointCoordinate)
+        BRTLogger.info("Joint Coordinate: {}".format(JointCoordinate))
         BRT_connector.close()
         return [True, list(np.array(JointCoordinate).astype(np.float64))]
     except: 
@@ -132,7 +134,7 @@ def setWorldCoordinate(WorldCoordinate, Speed=BRT_speed):
         BRT_connector.send(json.dumps(setWorldCoordinate_json).encode("ascii"))
         set_msg = BRT_connector.recv(1024) .decode('ascii')
         set_info = json.loads(set_msg)
-        print("[Set Info]:", set_info)
+        BRTLogger.info("Set WorldCoordinate info: {}, {}".format(set_info['cmdReply'], WorldCoordinate))
         BRT_connector.close()
         return True
     except: 
@@ -171,7 +173,7 @@ def setJointCoordinate(JointCoordinate):
         BRT_connector.send(json.dumps(setJointCoordinate_json).encode("ascii"))
         set_msg = BRT_connector.recv(1024) .decode('ascii')
         set_info = json.loads(set_msg)
-        print("[Set Info]:", set_info)
+        BRTLogger.info("Set JointCoordinate info: {}, {}".format(set_info['cmdReply'], JointCoordinate))
         BRT_connector.close()
         return True
     except: 
@@ -189,7 +191,7 @@ def waitMoving():
         sleep(MovingCheckGap)
         ret, state = getMoveState()
         if(not ret): 
-            print('[Get Move State False]: Can\'t get move state')
+            BRTLogger.error("Get Move State Error: Can\'t get move state")
             return False
         if(not state): 
             break

@@ -11,6 +11,10 @@
 import pyvisa
 import time
 
+import SystemLogger
+
+VNALogger = SystemLogger.logger_init("VNALogger", "./Log/system.log") # 日志管理器
+
 '''
     @description: 获取VNA在某个点的数据
     @param {
@@ -56,11 +60,11 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
 
         # Query identification string *IDN?
         myPna.write("*IDN?")
-        print("[VNA info]", myPna.read())
+        VNALogger.info("VNA info: {}".format(myPna.read()))
 
         # check the error queue
         myPna.write("SYST:ERR?")
-        print("[VNA info]", myPna.read())
+        VNALogger.info("VNA info: {}".format(myPna.read()))
 
         # Select the default measurement name as assigned on preset. To catalog the measurement names,
         # by channel number, use the 'CALCulate[n]:PARameter:CATalog?' command where [n] is the channel
@@ -119,14 +123,14 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         # queue query should return '+0, No Error', else the application has potentially
         # caused a correctable error!.
         myPna.write("SYST:ERR?")
-        print("[VNA info]", myPna.read())
+        VNALogger.info("VNA info: {}".format(myPna.read()))
 
         # Close the VISA connection
         myPna.close()
         return [True, Data_res]
 
     except Exception as err:
-        print("[Get VNA Data Error]", err)
+        VNALogger.error("Get VNA Data Error: {}".format(err))
         return [False, ['NULL', 'NULL', 'NULL']]
     pass
 

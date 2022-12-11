@@ -1,6 +1,9 @@
 # path
 bin/
 Data/
+Log/
 
 # file
-*_test*
+*_test_local*
+*.log*
+*.csv

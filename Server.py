@@ -1,3 +1,4 @@
+
 #coding:utf-8
 import Mission
 import BRTRobot
@@ -26,7 +27,6 @@ def move_init():
         axis_dict = {"x": 0, "y": 1, "z": 2, "u": 3, "v": 4, "w": 5 }
         _, WordCoordinate_now = BRTRobot.getWorldCoordinate()
         WordCoordinate_now[axis_dict[axis]] += float(step) * float(direct)
-        print(WordCoordinate_now)
         BRTRobot.setWorldCoordinate(WorldCoordinate=WordCoordinate_now)
         return "DONE"
 
@@ -119,13 +119,13 @@ def run():
     @return {}
 '''
 @app.route('/get_S_parameter', methods=['POST'])
-def move_init(): 
+def get_S_parameter(): 
     if request.method == 'POST':
         paras = []
-        paras_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step']
+        paras_name = ['a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 'mode']
         for i in paras_name: 
             paras.append(request.form.get(i))
-        BRTMission.scan_mode(float(paras[0]), float(paras[1]), float(paras[2]), float(paras[3]), float(paras[4]), float(paras[5]), paras[6], CheckFlag=check_flag)
+        BRTMission.scan_mode(float(paras[0]), float(paras[1]), float(paras[2]), float(paras[3]), float(paras[4]), float(paras[5]), paras[6])
         BRTMission.f_min = request.form.get('f_min')
         BRTMission.f_max = request.form.get('f_max')
         BRTMission.f_step = request.form.get('f_step')
@@ -135,6 +135,7 @@ def move_init():
         BRTMission.save_file = request.form.get('save_file')
         BRTMission.to_mailaddr = request.form.get('to_mailaddr')
         BRTMission.save_conf()
+        BRTMission.get_S_parameter()
         return "DONE"
 
 '''

@@ -1,5 +1,13 @@
+/*
+ * @Author: zsh zsh1282984748@163.com
+ * @Date: 2022-11-22 09:05:58
+ * @LastEditors: zsh zsh1282984748@163.com
+ * @LastEditTime: 2022-12-11 11:08:47
+ * @FilePath: \ArmScan\resource\js\index.js
+ * @Description: 任务页js脚本
+ */
 // 启动时加载配置
-$(function()
+$(function() 
 {
     $.post('/get_conf', {}, function(data,status){
         conf_json = JSON.parse(data);
@@ -12,7 +20,6 @@ $(function()
         for (var i = 0, len = confs.length; i < len; i++) {
             document.getElementById(confs[i]).value = conf_json[confs[i]];
         }
-        document.getElementById("save_file_S_parameter").value = "S_"+conf_json["save_file"];
     });
 });
 
@@ -135,7 +142,9 @@ function get_state(){
 
         // 设定路径信息
         var full_path = JSON.parse(data)['full_path'];
+        var S_full_path = JSON.parse(data)['S_full_path'];
         document.getElementById("full_path").innerHTML = '[文件路径]:' + full_path; 
+        document.getElementById("S_full_path").innerHTML = '[S参数文件路径]:' + S_full_path; 
     })
 }
 
