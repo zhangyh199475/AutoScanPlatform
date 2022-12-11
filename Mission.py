@@ -291,6 +291,11 @@ class Mission(threading.Thread):
         return json.dumps(available_range)
         pass
 
+
+    def get_S(self): 
+        
+        pass
+
     def run(self): 
         while(1): 
             # if (self.MoveFlag): 
