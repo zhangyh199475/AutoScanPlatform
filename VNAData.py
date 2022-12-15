@@ -111,7 +111,7 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         myTraceData = myPna.read()
 
 
-        DataList = myTraceData.split(',')
+        DataList = myTraceData.strip('\n').split(',')
         FREQ_STEP = f_step
         Data_res = []
         for index in range(numPoints):
