@@ -85,7 +85,7 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         }
         myPna.write(S_mode_dict[S_mode])
 
-        myPna.write("SENSe:SWEep:TYPE LIN")
+        # myPna.write("SENSe:SWEep:TYPE LIN")
 
         FREQ_START = f_min
         FREQ_STOP  = f_max_real
@@ -103,8 +103,8 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         myPna.read()
 
         # Trigger assertion with hold-off for trigger complete via *OPC?
-        myPna.write("SENS:SWE:MODE SING;*OPC?")
-        myPna.read()
+        # myPna.write("SENS:SWE:MODE SING;*OPC?")
+        # myPna.read()
 
         # The SDATA assertion queries underlying real and imaginary pair data
         myPna.write("CALC:DATA? SDATA")
