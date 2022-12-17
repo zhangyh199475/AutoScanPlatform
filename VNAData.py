@@ -52,8 +52,8 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         # when the predicating command functionality is complete. Do not use a loop
         # with *OPC? as there is no change from a 0 condition to a 1 condition.
         # A '1' is placed on the output buffer when the operation is complete.
-        myPna.write("SYST:PRES; *OPC?")
-        myPna.read()
+        # myPna.write("SYST:PRES; *OPC?")
+        # myPna.read()
 
         # Clear the event status registers and empty the error queue
         myPna.write("*CLS")
