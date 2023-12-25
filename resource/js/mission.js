@@ -12,7 +12,7 @@ $(function()
     $.post('/get_conf', {}, function(data,status){
         conf_json = JSON.parse(data);
         var confs = [
-            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step', 
+            'a_min', 'a_max', 'b_min', 'b_max', 'a_step', 'b_step',
             'mode', 
             'f_min', 'f_max', 'f_step', 'f_times', 'S_mode', 
             'save_folder', 'save_file', 'to_mailaddr'

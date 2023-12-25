@@ -36,7 +36,7 @@
             <option value = "S21">S21</option>
             <option value = "S22">S22</option>
         </select>
-        重复采集次数:<input type="text" id='f_times' value="30" style="width:60px;">
+        重复采集次数:<input type="text" id='f_times' value="1" style="width:60px;">
     </p>
     <p>
         <span id='a'>坐标X: </span>
@@ -49,14 +49,14 @@
         <span id='b'>坐标Y: </span>
         最小值:<input type="text" id='b_min' value="0" style="width:60px;">
         最大值:<input type="text" id='b_max' value="200" style="width:60px;">
-        步长:<input type="text" id='b_step' value="30" style="width:60px;">
+        步长:<input type="text" id='b_step' value="10" style="width:60px;">
         <span id="b_available">[范围]:未知</span>
     </p>
     <p>
         <span id='f'>频率F: </span>
-        最小值(GHz):<input type="text" id='f_min' value="0" style="width:60px;">
-        最大值(GHz):<input type="text" id='f_max' value="200" style="width:60px;">
-        步长(GHz):<input type="text" id='f_step' value="30" style="width:60px;">
+        最小值(GHz):<input type="text" id='f_min' value="0.1" style="width:60px;">
+        最大值(GHz):<input type="text" id='f_max' value="1" style="width:60px;">
+        步长(GHz):<input type="text" id='f_step' value="0.1" style="width:60px;">
     </p>
     <p>
         <p>
@@ -82,7 +82,7 @@
         </p>
     </p>
     <p>
-        <span>保存文件夹:</span><input type="text" id="save_folder" value="./", disabled></br>
+        <span>保存文件夹:</span><input type="text" id="save_folder" value="D:\workspace\AutoScanPlatform\Data", disabled></br>
         <span>保存文件名:</span><input type="text" id="save_file" value="tmp.csv"></br>
         <span id = "full_path">[文件路径]:未知</span><br>
         <span id = "S_full_path">[S参数文件路径]:未知</span></br>

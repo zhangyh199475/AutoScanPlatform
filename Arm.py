@@ -77,14 +77,18 @@ class Arm:
     def getWristCoordinate(self, x, y, z, u, v, w): 
         # 将xyz欧拉角转换成zyx欧拉角（先x，后y最后z），最后转动z轴更好计算末端z轴和世界坐标系x, y, z的夹角余弦
         # xyz一般用u, v, w表示，zxy一般用alpha, beta, gamma表示，即pitch, roll, yaw
+        # print('x, y, z, u, v, w: %f, %f, %f, %f, %f, %f'% (x, y, z, u, v, w))
         R_Matrix = R.from_euler('xyz', [u, v, w], degrees=True).as_matrix()
+        # print('R_Matrix:', R_Matrix)
         [alpha, beta, gamma] = R.from_matrix(R_Matrix).as_euler('zyx', degrees=True)
+        # print('[alpha, beta, gamma]: %f, %f, %f'%( alpha , beta, gamma))
 
         # 通过x, y轴旋转角beta, gamma计算夹角余弦并乘最后一个轴的长度转换到腕部坐标
         WristX = x - sin(beta / 180 * np.pi) * self.DH_d[5]
         WristY = y - sin(-gamma / 180 * np.pi) * cos(beta / 180 * np.pi) * self.DH_d[5]
         WristZ = z - cos(-gamma / 180 * np.pi) * cos(beta / 180 * np.pi) * self.DH_d[5]
-        return [WristX, WristY, WristZ] 
+        # print('[WristX, WristY, WristZ] : %f, %f, %f' % (WristX, WristY, WristZ))
+        return [WristX, WristY, WristZ]
 
     '''
         @description: Forward Kinematics, 正解机器人末端世界坐标系

@@ -107,6 +107,7 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         # myPna.read()
 
         # The SDATA assertion queries underlying real and imaginary pair data
+        # myPna.write("CALC:MEAS:DATA:SDATA?")
         myPna.write("CALC:DATA? SDATA")
         myTraceData = myPna.read()
 
@@ -117,7 +118,6 @@ def get_vnadata(f_min = 10.0, f_max = 18.0, f_step = 0.1, S_mode = 'S11'):
         for index in range(numPoints):
             data_tmp = [str(FREQ_START+FREQ_STEP*index), DataList[2*index], DataList[2*index+1]]
             Data_res.append(data_tmp)
-
         # Check the error queue. Initially *CLS asserted in beginning of program.
         # The application should run from stem to stern error free. The final error
         # queue query should return '+0, No Error', else the application has potentially

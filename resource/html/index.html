@@ -22,80 +22,68 @@
 	<h2>初始化阶段</h2>
     <button type="button" onclick="reset()">重置位置</button>
     <button type="button" onclick="reset_center()">回到原点</button>
+    <p id='angle'>
+    Angle:
+        旋转角度（绕Z轴顺时针旋转，限定-90°到90°）：
+        <input id="angle_text" type="number" value="0.0" min="-90" max="90" style="width:60px;" disabled="disabled" onchange="judge_value('angle')">
+        °
+        <button type="button" id="angle_confirm_btn" onclick="move('angle')" disabled="disabled">确定</button>
+        <button type="button" id='angle_reset_button' onclick="reset_angle()">角度归零</button>
+        <span id="angle_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
+    </p>
     <p id='x'>
     X: 
-        移动步长(mm):
-        <select id='x_select'>
-            <option value ="0.1">0.1</option>
-            <option value ="1">1</option>
-            <option value="10">10</option>
-            <option value="100">100</option>
-        </select>
-        方向:
-		<button type="button" onclick="move('x', -1)">-</button>
-		<button type="button" onclick="move('x', +1)">+</button>
+        移动步长:
+        <input id="x_text" type="number" value="0.1" style="width:60px;" onchange="judge_value('x')">
+         mm
+        <span id="x_available">[范围]:未知</span>
+        <button id="x_confirm_btn" type="button" onclick="move('x')">确定</button>
+        <span id="x_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
   	</p>
     <p id='y'>
     Y:
-        移动步长(mm):
-        <select id='y_select'>
-            <option value ="0.1">0.1</option>
-            <option value ="1">1</option>
-            <option value="10">10</option>
-            <option value="100">100</option>
-        </select>
-        方向:
-        <button type="button" onclick="move('y', -1)">-</button>
-        <button type="button" onclick="move('y', +1)">+</button>
+        移动步长:
+        <input id="y_text" type="number" value="0.1" style="width:60px;" onchange="judge_value('y')">
+         mm
+        <span id="y_available">[范围]:未知</span>
+        <button id="y_confirm_btn" type="button" onclick="move('y')">确定</button>
+        <span id="y_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
   	</p>
     <p id='z'>
      Z:
-        移动步长(mm):
-        <select id='z_select'>
-            <option value ="0.1">0.1</option>
-            <option value ="1">1</option>
-            <option value="10">10</option>
-            <option value="100">100</option>
-        </select>
-        方向:
-        <button type="button" onclick="move('z', -1)">-</button>
-        <button type="button" onclick="move('z', +1)">+</button>
+        移动步长:
+        <input id="z_text" type="number" value="0.1" style="width:60px;" onchange="judge_value('z')">
+         mm
+        <span id="z_available">[范围]:未知</span>
+        <button id="z_confirm_btn" type="button" onclick="move('z')">确定</button>
+        <span id="z_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
   	</p>
     <p id='u'>
     U: 
-        移动步长(°):
-        <select id='u_select'>
-            <option value ="0.1">0.1</option>
-            <option value ="1">1</option>
-            <option value="10">10</option>
-        </select>
-        方向:
-        <button type="button" onclick="move('u', -1)">-</button>
-        <button type="button" onclick="move('u', +1)">+</button>
+        移动步长:
+        <input id="u_text" type="number" value="0.1" style="width:60px;" onchange="judge_value('u')">
+        °
+        <button id="u_confirm_btn" type="button" onclick="move('u')">确定</button>
+        <span id="u_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
+        <span id="u_available" style="visibility:hidden">[范围]:未知</span>
     </p>
     <p id='v'>
     V: 
-        移动步长(°):
-        <select id='v_select'>
-            <option value ="0.1">0.1</option>
-            <option value ="1">1</option>
-            <option value="10">10</option>
-        </select>
-        方向:
-        <button type="button" onclick="move('v', -1)">-</button>
-        <button type="button" onclick="move('v', +1)">+</button>
+        移动步长:
+        <input id="v_text" type="number" value="0.1" style="width:60px;" onchange="judge_value('v')">
+        °
+        <button id="v_confirm_btn" type="button" onclick="move('v')">确定</button>
+        <span id="v_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
+        <span id="v_available" style="visibility:hidden">[范围]:未知</span>
     </p>
     <p id='w'>
     W: 
-        移动步长(°):
-        <select id='w_select'>
-            <option value ="0.1">0.1</option>
-            <option value ="1">1</option>
-            <option value="10">10</option>
-        </select>
-        方向:
-        <button type="button" onclick="move('w', -1)">-</button>
-        <button type="button" onclick="move('w', +1)">+</button>
+        移动步长:
+        <input id="w_text" type="number" value="0.1" style="width:60px;" onchange="judge_value('w')">
+        °
+        <button id="w_confirm_btn" type="button" onclick="move('w')">确定</button>
+        <span id="w_alert" style="color:red;visibility:hidden">超出范围，请调整参数重试！</span>
+        <span id="w_available" style="visibility:hidden">[范围]:未知</span>
     </p>
     <button type="button" onclick="initialize()">完成初始化</button>
     <button type="button" onclick="to_mission()">跳过初始化</button>
